@@ -22,7 +22,13 @@
 
 轻量级、无依赖，仅需 Cloudflare Worker 即可运行
 
+## 📄 示例输出
 
+查询成功后，页面将显示类似以下内容：
+
+![Screenshot_2025-11-06-23-19-08-17_40deb401b9ffe8e1df2f1cc5ba480b12.jpg](https://twilight.vvvv.ee/file/1762442543582_Screenshot_2025-11-06-23-19-08-17_40deb401b9ffe8e1df2f1cc5ba480b12.jpg)
+
+![Screenshot_2025-11-06-23-18-53-93_40deb401b9ffe8e1df2f1cc5ba480b12.jpg](https://twilight.vvvv.ee/file/1762442529530_Screenshot_2025-11-06-23-18-53-93_40deb401b9ffe8e1df2f1cc5ba480b12.jpg)
 
 ---
 
