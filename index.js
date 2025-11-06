@@ -1,13 +1,12 @@
 
 export default {
   async fetch(request, env, ctx) {
-  
-    const url = new URL(request.url);
 
-    // 使用环境变量保存真实密码
+
+    const url = new URL(request.url);
     const PASSWORD = env.PASSWORD || "mysecret";
 
-    // 用于安全比较的哈希函数
+    // 🔒 计算 SHA-256 哈希
     async function hash(str) {
       const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
       return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
@@ -16,12 +15,10 @@ export default {
     const cookie = request.headers.get("Cookie") || "";
     const cookieMatch = cookie.match(/auth=([a-f0-9]{64})/);
     const cookieHash = cookieMatch ? cookieMatch[1] : null;
-
     const passwordHash = await hash(PASSWORD);
-
-    // 检查是否已登录（cookie 内的 hash 是否匹配）
     const isLoggedIn = cookieHash === passwordHash;
 
+    // 🔑 登录逻辑
     if (url.pathname === "/login" && request.method === "POST") {
       const formData = await request.formData();
       const password = formData.get("password");
@@ -35,35 +32,111 @@ export default {
           },
         });
       } else {
-        return new Response("密码错误！<script>setTimeout(()=>history.back(),1500)</script>", {
-          headers: { "Content-Type": "text/html; charset=utf-8" },
-        });
+        return new Response(`
+          <html><body>
+          <script>alert("密码错误！"); history.back();</script>
+          </body></html>
+        `, { headers: { "Content-Type": "text/html; charset=utf-8" } });
       }
     }
 
+    // 🧹 登出逻辑（可选）
+    if (url.pathname === "/logout" && request.method === "POST") {
+      return new Response("<script>location.href='/'</script>", {
+        headers: {
+          "Set-Cookie": `auth=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`,
+        },
+      });
+    }
+
+    // 🚪 未登录：显示优化后的登录页
     if (!isLoggedIn) {
-      // 未登录：显示密码输入表单
       return new Response(`
         <!DOCTYPE html>
-        <html>
+        <html lang="zh-CN">
         <head>
           <meta charset="UTF-8" />
-          <title>访问验证</title>
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>安全登录</title>
           <style>
-            body { display:flex; justify-content:center; align-items:center; height:100vh; background:#f2f2f2; font-family:sans-serif; }
-            form { background:#fff; padding:2rem; border-radius:12px; box-shadow:0 2px 10px rgba(0,0,0,0.1); width:280px; }
-            h2 { margin-bottom:1rem; text-align:center; }
-            input, button { width:100%; padding:0.6rem; margin-top:0.5rem; font-size:1rem; border-radius:6px; border:1px solid #ccc; }
-            button { background:#0078f2; color:white; border:none; cursor:pointer; transition:0.2s; }
-            button:hover { background:#005fcc; }
+            * { box-sizing: border-box; margin: 0; padding: 0; }
+            body {
+              height: 100vh;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              background: linear-gradient(135deg, #89f7fe, #66a6ff);
+              font-family: "Segoe UI", sans-serif;
+              color: #333;
+              overflow: hidden;
+            }
+            .card {
+              background: #fff;
+              padding: 2.5rem;
+              border-radius: 16px;
+              box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+              width: 90%;
+              max-width: 350px;
+              text-align: center;
+              animation: fadeIn 0.8s ease;
+            }
+            .card h2 {
+              margin-bottom: 1rem;
+              font-size: 1.5rem;
+              color: #111;
+            }
+            input[type="password"] {
+              width: 100%;
+              padding: 0.75rem;
+              margin-top: 1rem;
+              border: 1px solid #ddd;
+              border-radius: 8px;
+              font-size: 1rem;
+              transition: 0.3s;
+            }
+            input[type="password"]:focus {
+              outline: none;
+              border-color: #0078f2;
+              box-shadow: 0 0 5px rgba(0,120,242,0.3);
+            }
+            button {
+              width: 100%;
+              padding: 0.8rem;
+              margin-top: 1.5rem;
+              background: #0078f2;
+              border: none;
+              color: white;
+              font-size: 1rem;
+              border-radius: 8px;
+              cursor: pointer;
+              transition: background 0.3s, transform 0.1s;
+            }
+            button:hover {
+              background: #005fcc;
+            }
+            button:active {
+              transform: scale(0.98);
+            }
+            .footer {
+              margin-top: 1.5rem;
+              font-size: 0.85rem;
+              color: #666;
+            }
+            @keyframes fadeIn {
+              from { opacity: 0; transform: translateY(20px); }
+              to { opacity: 1; transform: translateY(0); }
+            }
           </style>
         </head>
         <body>
-          <form method="POST" action="/login">
-            <h2>请输入访问密码</h2>
-            <input type="password" name="password" placeholder="密码" required />
-            <button type="submit">登录</button>
-          </form>
+          <div class="card">
+            <h2>🔐 请输入访问密码</h2>
+            <form method="POST" action="/login">
+              <input type="password" name="password" placeholder="输入密码..." required />
+              <button type="submit">登录</button>
+            </form>
+            <div class="footer">受保护的页面 · Cloudflare Workers</div>
+          </div>
         </body>
         </html>
       `, { headers: { "Content-Type": "text/html; charset=utf-8" } });
