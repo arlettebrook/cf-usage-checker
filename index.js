@@ -28,18 +28,21 @@ export default {
   <style>
     :root {
       /* ======= Light Theme ======= */
-      --bg-light: linear-gradient(135deg, #fdfcff, #e3f2fd, #fff5f7);
-      --card-light: rgba(255, 255, 255, 0.85);
+      --bg-light: linear-gradient(135deg, #f8fafc, #eef2ff, #f0f9ff);
+      --card-light: rgba(255, 255, 255, 0.92);
       --text-light: #1e293b;
       --shadow-light: rgba(0, 0, 0, 0.08);
 
       /* ======= Dark Theme ======= */
       --bg-dark: radial-gradient(circle at top left, #1e293b, #0f172a);
-      --card-dark: rgba(30, 41, 59, 0.7);
+      --card-dark: rgba(30, 41, 59, 0.75);
       --text-dark: #f1f5f9;
       --shadow-dark: rgba(0, 0, 0, 0.6);
 
+      /* ======= Accent Colors ======= */
       --accent: #6366f1;
+      --progress-light: linear-gradient(90deg, #10b981, #3b82f6, #8b5cf6);
+      --progress-dark: linear-gradient(90deg, #22d3ee, #6366f1);
     }
 
     body {
@@ -80,8 +83,8 @@ export default {
       font-size: clamp(1.2rem, 4vw, 1.8rem);
       letter-spacing: 0.6px;
       text-shadow: 0 2px 8px rgba(255, 255, 255, 0.35);
-      text-align: center;
       flex: 1 1 100%;
+      text-align: center;
     }
 
     @media (min-width: 640px) {
@@ -136,17 +139,23 @@ export default {
 
     .card:hover {
       transform: translateY(-6px) scale(1.02);
-      box-shadow: 0 20px 50px rgba(99, 102, 241, 0.3);
+      box-shadow: 0 20px 50px rgba(99, 102, 241, 0.25);
     }
 
-    /* 卡片标题与数字 */
+    /* 卡片标题与文字 */
     .card h2 {
       font-size: 1.4rem;
       font-weight: 700;
       margin-bottom: 1rem;
-      text-align: center;
       color: var(--accent);
       text-shadow: 0 1px 6px rgba(99, 102, 241, 0.15);
+      text-align: left;
+    }
+
+    .card .details p {
+      text-align: left;
+      font-size: 1rem;
+      line-height: 1.6;
     }
 
     .num {
@@ -155,7 +164,7 @@ export default {
       color: inherit;
       text-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
       display: inline-block;
-      min-width: 2.5em;
+      min-width: 3em;
       text-align: right;
     }
 
@@ -163,8 +172,24 @@ export default {
       text-shadow: 0 1px 6px rgba(255,255,255,0.1);
     }
 
+    /* 进度条 */
+    .progress-bar {
+      width: 100%;
+      height: 0.75rem;
+      border-radius: 9999px;
+      overflow: hidden;
+      background-color: rgba(0, 0, 0, 0.1);
+    }
+
     .progress {
+      height: 100%;
+      border-radius: 9999px;
       transition: width 1s ease-in-out;
+      background: var(--progress-light);
+    }
+
+    html.dark .progress {
+      background: var(--progress-dark);
     }
 
     /* 页脚 */
@@ -182,6 +207,7 @@ export default {
       font-weight: 600;
       transition: all 0.3s ease;
     }
+
     footer a:hover {
       filter: brightness(1.3);
       text-shadow: 0 0 8px rgba(99,102,241,0.4);
@@ -216,22 +242,22 @@ export default {
     </div>
   </nav>
 
-  <!-- 主内容区域（后端注入） -->
+  <!-- 主内容区域 -->
   <main id="data-section" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 w-full max-w-6xl">
     ${data.accounts.map(acc => {
       const usedPercent = (acc.total / (acc.total + acc.free_quota_remaining) * 100).toFixed(1);
       return `
       <div class="card">
         <h2>${acc.account_name}</h2>
-        <div class="space-y-2 text-gray-700 dark:text-gray-200 text-center sm:text-left">
-          <p><strong>📄 Pages:</strong> <span class="num" data-value="${acc.pages}">0</span></p>
-          <p><strong>⚙️ Workers:</strong> <span class="num" data-value="${acc.workers}">0</span></p>
-          <p><strong>📦 总计:</strong> <span class="num" data-value="${acc.total}">0</span></p>
-          <p><strong>🎁 免费额度剩余:</strong> <span class="num" data-value="${acc.free_quota_remaining}">0</span></p>
+        <div class="details text-gray-700 dark:text-gray-200">
+          <p><strong>📄 Pages：</strong><span class="num" data-value="${acc.pages}">0</span></p>
+          <p><strong>⚙️ Workers：</strong><span class="num" data-value="${acc.workers}">0</span></p>
+          <p><strong>📦 总计：</strong><span class="num" data-value="${acc.total}">0</span></p>
+          <p><strong>🎁 免费额度剩余：</strong><span class="num" data-value="${acc.free_quota_remaining}">0</span></p>
         </div>
         <div class="mt-5">
-          <div class="w-full bg-gray-300 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
-            <div class="bg-gradient-to-r from-green-400 to-blue-500 h-3 rounded-full progress" style="width: ${usedPercent}%"></div>
+          <div class="progress-bar">
+            <div class="progress" style="width: ${usedPercent}%"></div>
           </div>
           <p class="text-sm mt-2 text-right opacity-80">${usedPercent}% 已使用</p>
         </div>
