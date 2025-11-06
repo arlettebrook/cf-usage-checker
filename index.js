@@ -16,12 +16,15 @@ async function getCloudflareUsage(APIToken) {
   const sum = (a) => a?.reduce((t, i) => t + (i?.sum?.requests || 0), 0) || 0;
 
   try {
-    // 1️⃣ 获取账户 ID
+    // 1️⃣ 获取账户 ID 和邮箱
     const accRes = await fetch(`${API}/accounts`, { headers: cfg });
     if (!accRes.ok) throw new Error(`账户获取失败: ${accRes.status}`);
     const accData = await accRes.json();
     if (!accData?.result?.length) throw new Error("未找到账户");
-    const AccountID = accData.result[0].id;
+
+    const account = accData.result[0];
+    const AccountID = account.id;
+    const AccountEmail = account?.settings?.enforce_twofactor?.email || account?.email || "未知邮箱";
 
     // 2️⃣ 时间范围（当天 UTC 0点 ~ 当前时间）
     const now = new Date();
@@ -62,8 +65,23 @@ async function getCloudflareUsage(APIToken) {
     const workers = sum(acc.workersInvocationsAdaptive);
     const total = pages + workers;
 
-    return { success: true, pages, workers, total, account: AccountID };
+    return {
+      success: true,
+      account_id: AccountID,
+      account_email: AccountEmail,
+      pages,
+      workers,
+      total
+    };
   } catch (err) {
-    return { success: false, error: err.message, pages: 0, workers: 0, total: 0 };
+    return {
+      success: false,
+      error: err.message,
+      account_id: null,
+      account_email: null,
+      pages: 0,
+      workers: 0,
+      total: 0
+    };
   }
 }
