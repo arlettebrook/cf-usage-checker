@@ -166,7 +166,7 @@ export default {
 
   <footer class="mt-12 text-gray-500 text-sm text-center">
     © 2025 Cloudflare Worker Dashboard • Designed with 💜 by 
-    <a href="https://arlettebrook.example.com" target="_blank">Arlettebrook</a>
+    <a href="https://github.com/arlettebrook" target="_blank">Arlettebrook</a>
   </footer>
 
   <script>
