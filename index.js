@@ -24,7 +24,6 @@ export default {
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>🌤️ Cloudflare Workers & Pages Usage Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
     :root {
@@ -189,7 +188,6 @@ export default {
   <main id="data-section" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 w-full max-w-6xl">
     ${data.accounts.map(acc => {
       const usedPercent = (acc.total / (acc.total + acc.free_quota_remaining) * 100).toFixed(1);
-      const id = acc.account_name.replace(/\s+/g, '_');
       return `
       <div class="card">
         <h2 class="text-2xl font-semibold mb-4">${acc.account_name}</h2>
@@ -206,8 +204,6 @@ export default {
           </div>
           <p class="text-sm mt-2 text-right opacity-80">${usedPercent}% 已使用</p>
         </div>
-
-        <canvas id="chart-${id}" height="130" class="mt-4"></canvas>
       </div>`;
     }).join('')}
   </main>
@@ -253,37 +249,6 @@ export default {
       root.classList.toggle('dark');
       localStorage.setItem('theme', root.classList.contains('dark') ? 'dark' : 'light');
     });
-
-    // Chart.js 迷你图表
-    const isDark = root.classList.contains('dark');
-    const chartColorUsed = isDark ? '#60a5fa' : '#3b82f6';
-    const chartColorFree = isDark ? '#4ade80' : '#10b981';
-
-    ${data.accounts.map(acc => {
-      const used = acc.total;
-      const free = acc.free_quota_remaining;
-      const id = acc.account_name.replace(/\s+/g, '_');
-      return `
-      new Chart(document.getElementById('chart-${id}').getContext('2d'), {
-        type: 'doughnut',
-        data: {
-          labels: ['已使用', '剩余额度'],
-          datasets: [{
-            data: [${used}, ${free}],
-            backgroundColor: ['${chartColorUsed}', '${chartColorFree}'],
-            borderWidth: 1,
-            hoverOffset: 6
-          }]
-        },
-        options: {
-          plugins: {
-            legend: { display: false }
-          },
-          cutout: '75%',
-          responsive: true
-        }
-      });`;
-    }).join('')}
   </script>
 </body>
 </html>
