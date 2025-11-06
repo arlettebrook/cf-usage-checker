@@ -27,24 +27,33 @@ export default {
 
   <style>
     :root {
-      --bg-light: linear-gradient(135deg, #f8fafc, #e0f2fe, #fdf2f8);
-      --bg-dark: linear-gradient(135deg, #0f172a, #1e293b);
-      --card-light: rgba(255, 255, 255, 0.9);
-      --card-dark: rgba(31, 41, 55, 0.8);
+      /* ======= Light Theme ======= */
+      --bg-light: linear-gradient(135deg, #fdfcff, #e3f2fd, #fff5f7);
+      --card-light: rgba(255, 255, 255, 0.85);
+      --text-light: #1e293b;
+      --shadow-light: rgba(0, 0, 0, 0.08);
+
+      /* ======= Dark Theme ======= */
+      --bg-dark: radial-gradient(circle at top left, #1e293b, #0f172a);
+      --card-dark: rgba(30, 41, 59, 0.7);
+      --text-dark: #f1f5f9;
+      --shadow-dark: rgba(0, 0, 0, 0.6);
+
+      --accent: #6366f1;
     }
 
     body {
-      background: var(--bg-light);
       font-family: 'Inter', sans-serif;
-      transition: all 0.5s ease-in-out;
       min-height: 100vh;
+      background: var(--bg-light);
+      color: var(--text-light);
+      transition: all 0.6s ease-in-out;
       background-attachment: fixed;
-      color: #1e293b;
     }
 
     html.dark body {
       background: var(--bg-dark);
-      color: #f9fafb;
+      color: var(--text-dark);
     }
 
     /* 顶部导航栏 */
@@ -54,85 +63,115 @@ export default {
       justify-content: space-between;
       align-items: center;
       background: linear-gradient(90deg, #6366f1, #3b82f6, #06b6d4);
-      padding: 0.9rem 1.5rem;
-      border-radius: 1rem;
+      padding: 1rem 1.8rem;
+      border-radius: 1.2rem;
       color: white;
-      box-shadow: 0 6px 30px rgba(99,102,241,0.25);
-      backdrop-filter: blur(12px);
+      box-shadow: 0 8px 32px rgba(99, 102, 241, 0.35);
+      backdrop-filter: blur(14px);
       position: sticky;
       top: 1rem;
       z-index: 50;
       flex-wrap: wrap;
-      gap: 0.75rem;
+      gap: 1rem;
     }
 
     .navbar h1 {
       font-weight: 700;
-      font-size: clamp(1.1rem, 4vw, 1.6rem);
-      letter-spacing: 0.5px;
-      text-shadow: 0 0 8px rgba(255,255,255,0.3);
-      flex: 1 1 auto;
+      font-size: clamp(1.2rem, 4vw, 1.8rem);
+      letter-spacing: 0.6px;
+      text-shadow: 0 2px 8px rgba(255, 255, 255, 0.35);
+      text-align: center;
+      flex: 1 1 100%;
+    }
+
+    @media (min-width: 640px) {
+      .navbar h1 {
+        flex: 1 1 auto;
+        text-align: left;
+      }
     }
 
     .nav-btn {
       display: flex;
-      gap: 0.6rem;
-      flex-shrink: 0;
+      gap: 0.75rem;
+      justify-content: center;
     }
 
     .nav-btn button {
-      background: rgba(255,255,255,0.25);
-      padding: 0.5rem 1rem;
+      background: rgba(255, 255, 255, 0.25);
+      padding: 0.55rem 1.2rem;
       border-radius: 9999px;
-      backdrop-filter: blur(6px);
-      transition: all 0.3s ease;
+      backdrop-filter: blur(8px);
       border: none;
       color: white;
       font-weight: 500;
       cursor: pointer;
+      box-shadow: 0 2px 6px rgba(255,255,255,0.25);
+      transition: all 0.3s ease;
     }
 
     .nav-btn button:hover {
-      background: rgba(255,255,255,0.4);
-      transform: translateY(-2px) scale(1.05);
+      background: rgba(255, 255, 255, 0.4);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 10px rgba(255,255,255,0.35);
     }
 
-    /* 卡片样式 */
+    /* 卡片 */
     .card {
       background: var(--card-light);
       border-radius: 1.25rem;
-      padding: 1.75rem;
-      box-shadow: 0 12px 30px rgba(0,0,0,0.08);
-      border: 1px solid rgba(255,255,255,0.5);
-      transition: all 0.5s ease;
+      padding: 2rem 1.8rem;
+      box-shadow: 0 10px 30px var(--shadow-light);
+      border: 1px solid rgba(255,255,255,0.4);
+      transition: all 0.45s ease;
       backdrop-filter: blur(10px);
-      overflow: hidden;
       position: relative;
     }
 
     html.dark .card {
       background: var(--card-dark);
-      box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+      box-shadow: 0 12px 40px var(--shadow-dark);
       border: 1px solid rgba(255,255,255,0.08);
     }
 
     .card:hover {
       transform: translateY(-6px) scale(1.02);
-      box-shadow: 0 20px 50px rgba(99,102,241,0.25);
+      box-shadow: 0 20px 50px rgba(99, 102, 241, 0.3);
+    }
+
+    /* 卡片标题与数字 */
+    .card h2 {
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      text-align: center;
+      color: var(--accent);
+      text-shadow: 0 1px 6px rgba(99, 102, 241, 0.15);
+    }
+
+    .num {
+      font-weight: 700;
+      font-size: 1.05rem;
+      color: inherit;
+      text-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+      display: inline-block;
+      min-width: 2.5em;
+      text-align: right;
+    }
+
+    html.dark .num {
+      text-shadow: 0 1px 6px rgba(255,255,255,0.1);
     }
 
     .progress {
       transition: width 1s ease-in-out;
     }
 
-    .num {
-      transition: all 0.4s ease-out;
-      font-weight: 600;
-      color: #1e293b;
-    }
-
-    html.dark .num {
-      color: #e5e7eb;
+    /* 页脚 */
+    footer {
+      text-align: center;
+      margin-top: 3rem;
+      opacity: 0.8;
     }
 
     footer a {
@@ -148,7 +187,7 @@ export default {
       text-shadow: 0 0 8px rgba(99,102,241,0.4);
     }
 
-    /* 背景动画 */
+    /* 动态背景 */
     .animated-bg {
       position: absolute;
       inset: 0;
@@ -177,14 +216,14 @@ export default {
     </div>
   </nav>
 
-  <!-- 主内容区域（保留旧版模板渲染方式） -->
+  <!-- 主内容区域（后端注入） -->
   <main id="data-section" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 w-full max-w-6xl">
     ${data.accounts.map(acc => {
       const usedPercent = (acc.total / (acc.total + acc.free_quota_remaining) * 100).toFixed(1);
       return `
       <div class="card">
-        <h2 class="text-2xl font-semibold mb-4">${acc.account_name}</h2>
-        <div class="space-y-2 text-gray-700 dark:text-gray-200">
+        <h2>${acc.account_name}</h2>
+        <div class="space-y-2 text-gray-700 dark:text-gray-200 text-center sm:text-left">
           <p><strong>📄 Pages:</strong> <span class="num" data-value="${acc.pages}">0</span></p>
           <p><strong>⚙️ Workers:</strong> <span class="num" data-value="${acc.workers}">0</span></p>
           <p><strong>📦 总计:</strong> <span class="num" data-value="${acc.total}">0</span></p>
@@ -196,12 +235,11 @@ export default {
           </div>
           <p class="text-sm mt-2 text-right opacity-80">${usedPercent}% 已使用</p>
         </div>
-      </div>
-      `;
+      </div>`;
     }).join('')}
   </main>
 
-  <footer class="mt-12 text-gray-500 text-sm text-center">
+  <footer class="text-gray-500 text-sm text-center">
     © 2025 Cloudflare Worker Dashboard • Designed with 💜 by 
     <a href="https://github.com/arlettebrook" target="_blank">Arlettebrook</a>
   </footer>
@@ -225,7 +263,7 @@ export default {
     }
     animateNumbers();
 
-    // 刷新按钮动画
+    // 刷新动画
     document.getElementById('refresh-btn').addEventListener('click', () => {
       document.body.style.opacity = '0.6';
       setTimeout(() => location.reload(), 300);
@@ -238,7 +276,6 @@ export default {
         (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
       root.classList.add('dark');
     }
-
     toggle.addEventListener('click', () => {
       root.classList.toggle('dark');
       localStorage.setItem('theme', root.classList.contains('dark') ? 'dark' : 'light');
