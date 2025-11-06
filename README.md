@@ -85,7 +85,7 @@ Settings → Variables → Environment Variables
 MULTI_CF_API_TOKENS = token1,token2,token3...
 # 多个 Cloudflare API Token，用英文逗号分隔
 
-PASSWORD	= Admin # 用于访问保护的密码
+PASSWORD = Admin # 用于访问保护的密码
 ```
 
 
