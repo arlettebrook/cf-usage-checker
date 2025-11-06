@@ -1,4 +1,4 @@
-# ☁️ CF Usage Checker
+## ☁️ CF Usage Checker
 
 通过 Cloudflare API 获取指定账户下 Workers 与 Pages Functions 的调用次数（使用情况）。
 支持多账户查询，并可通过密码访问结果页面。
@@ -12,7 +12,7 @@
 
 ---
 
-# 🚀 功能介绍
+## 🚀 功能介绍
 
 获取 Cloudflare Workers 与 Pages Functions 的使用量数据
 
@@ -22,7 +22,7 @@
 
 轻量级、无依赖，仅需 Cloudflare Worker 即可运行
 
-## 📄 示例输出
+### 📄 示例输出
 
 查询成功后，页面将显示类似以下内容：
 
@@ -32,9 +32,23 @@
 
 ---
 
-# 🧩 部署方式
+## 🧩 部署方式
 
-方法一：使用 GitHub 仓库导入部署（推荐）
+方式一：通过 GitHub 仓库自动部署
+
+1. Fork 本仓库
+2. 前往 Cloudflare Dashboard → Workers & Pages → Pages
+3. 点击「创建项目」→「连接到 Git」
+4. 选择你 Fork 的仓库
+5. 配置构建设置：
+   · 项目名称：cf-usage-checker（可自定义）
+   · 生产分支：main（根据你的仓库设置）
+   · 构建设置：
+     · 构建命令：留空
+     · 构建输出目录：留空
+6. 点击「保存并部署」
+
+方法二：使用 GitHub 仓库导入部署（推荐）
 
 1. Fork 本仓库
 
@@ -72,7 +86,7 @@
 3. 模板选择「Hello World」
 
 
-4. 删除默认代码，粘贴仓库中的 index.js 源码
+4. 删除默认代码，粘贴仓库中的 _worker.js 源码
 
 
 5. 点击 保存并部署
@@ -82,7 +96,7 @@
 
 ---
 
-# ⚙️ 环境变量配置
+## ⚙️ 环境变量配置
 
 在 Cloudflare Workers 控制台中，进入
 Settings → Variables → Environment Variables
@@ -93,33 +107,24 @@ Settings → Variables → Environment Variables
 MULTI_CF_API_TOKENS = token1,token2,token3...
 # 多个 Cloudflare API Token，用英文逗号分隔
 
-PASSWORD = Admin # 用于访问保护的密码
+PASSWORD = mysecret # 用于访问保护的默认密码
 ```
 
 
 ---
 
-🔐 使用说明
+### 🔐 使用说明
 
-1. 部署完成后，访问你的 Worker 地址，例如：
-
-https://cf-usage-checker.your-subdomain.workers.dev
-
-
+1. 部署完成后，访问你的部署地址（可自定域）
 2. 页面会提示输入访问密码
-
-
 3. 输入你在环境变量中设置的 PASSWORD
-
-
 4. 即可查看各账户的 Workers 与 Pages Functions 调用统计信息
-
 
 
 
 ---
 
-# 🧰 API Token 获取方式
+## 🧰 API Token 获取方式
 快速直接的方式:
 - 进入Cloudflare账户管理-账户API令牌-创建令牌
 - 使用`读取所有资源`为模板创建令牌即可（需要指定账户的所有区域）
@@ -128,8 +133,4 @@ https://cf-usage-checker.your-subdomain.workers.dev
 
 
 
-
-
-
----
 
