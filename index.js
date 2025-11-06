@@ -14,11 +14,60 @@ export default {
       );
     }
 
-    const result = await getCloudflareUsage(tokens);
-    return new Response(JSON.stringify(result, null, 2), {
-      headers: { "Content-Type": "application/json; charset=utf-8" }
-    });
-  }
+    const data = await getCloudflareUsage(tokens);
+
+    const html = `
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>账户数据展示</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { background-color: #f9fafb; }
+    .card {
+      transition: all 0.3s ease;
+    }
+    .card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col items-center p-8">
+  <h1 class="text-3xl font-bold text-gray-800 mb-6">📊 Cloudflare 账户数据</h1>
+  
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-6xl">
+    ${data.accounts.map(acc => `
+      <div class="card bg-white rounded-2xl shadow p-6">
+        <h2 class="text-xl font-semibold text-indigo-600 mb-3">${acc.account_name}</h2>
+        <p class="text-gray-700 mb-1"><strong>📄 Pages:</strong> ${acc.pages}</p>
+        <p class="text-gray-700 mb-1"><strong>⚙️ Workers:</strong> ${acc.workers}</p>
+        <p class="text-gray-700 mb-1"><strong>📦 总计:</strong> ${acc.total}</p>
+        <p class="text-gray-700 mb-1"><strong>🎁 免费额度剩余:</strong> ${acc.free_quota_remaining}</p>
+        <div class="mt-3">
+          <div class="w-full bg-gray-200 rounded-full h-3">
+            <div class="bg-green-500 h-3 rounded-full" style="width:${(acc.total / (acc.total + acc.free_quota_remaining) * 100).toFixed(1)}%"></div>
+          </div>
+          <p class="text-sm text-gray-500 mt-1 text-right">${(acc.total / (acc.total + acc.free_quota_remaining) * 100).toFixed(1)}% 已使用</p>
+        </div>
+      </div>
+    `).join('')}
+  </div>
+
+  <footer class="mt-10 text-gray-500 text-sm">
+    © ${new Date().getFullYear()} Cloudflare Worker 数据展示
+  </footer>
+</body>
+</html>
+`;
+
+    return new Response(html, {
+      headers: { "content-type": "text/html; charset=utf-8" },
+    });
+  },
+    
 };
 
 /**
