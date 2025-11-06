@@ -3,4 +3,4 @@ main = "index.js"
 compatibility_date = "2024-10-01"
 
 [vars]
-MULTI_CF_API_TOKENS=token1,token2,token3
+MULTI_CF_API_TOKENS="token1,token2,token3"
