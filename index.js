@@ -1,6 +1,76 @@
 
 export default {
   async fetch(request, env, ctx) {
+  
+    const url = new URL(request.url);
+
+    // 使用环境变量保存真实密码
+    const PASSWORD = env.PASSWORD || "mysecret";
+
+    // 用于安全比较的哈希函数
+    async function hash(str) {
+      const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
+      return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
+    }
+
+    const cookie = request.headers.get("Cookie") || "";
+    const cookieMatch = cookie.match(/auth=([a-f0-9]{64})/);
+    const cookieHash = cookieMatch ? cookieMatch[1] : null;
+
+    const passwordHash = await hash(PASSWORD);
+
+    // 检查是否已登录（cookie 内的 hash 是否匹配）
+    const isLoggedIn = cookieHash === passwordHash;
+
+    if (url.pathname === "/login" && request.method === "POST") {
+      const formData = await request.formData();
+      const password = formData.get("password");
+      const inputHash = await hash(password);
+
+      if (inputHash === passwordHash) {
+        return new Response("登录成功！<script>location.href='/'</script>", {
+          headers: {
+            "Content-Type": "text/html; charset=utf-8",
+            "Set-Cookie": `auth=${inputHash}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=86400`,
+          },
+        });
+      } else {
+        return new Response("密码错误！<script>setTimeout(()=>history.back(),1500)</script>", {
+          headers: { "Content-Type": "text/html; charset=utf-8" },
+        });
+      }
+    }
+
+    if (!isLoggedIn) {
+      // 未登录：显示密码输入表单
+      return new Response(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="UTF-8" />
+          <title>访问验证</title>
+          <style>
+            body { display:flex; justify-content:center; align-items:center; height:100vh; background:#f2f2f2; font-family:sans-serif; }
+            form { background:#fff; padding:2rem; border-radius:12px; box-shadow:0 2px 10px rgba(0,0,0,0.1); width:280px; }
+            h2 { margin-bottom:1rem; text-align:center; }
+            input, button { width:100%; padding:0.6rem; margin-top:0.5rem; font-size:1rem; border-radius:6px; border:1px solid #ccc; }
+            button { background:#0078f2; color:white; border:none; cursor:pointer; transition:0.2s; }
+            button:hover { background:#005fcc; }
+          </style>
+        </head>
+        <body>
+          <form method="POST" action="/login">
+            <h2>请输入访问密码</h2>
+            <input type="password" name="password" placeholder="密码" required />
+            <button type="submit">登录</button>
+          </form>
+        </body>
+        </html>
+      `, { headers: { "Content-Type": "text/html; charset=utf-8" } });
+    }
+
+
+
     // 多个 Token 以逗号分隔
     const tokens = (env.MULTI_CF_API_TOKENS || "")
       .split(",")
