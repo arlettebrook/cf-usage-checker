@@ -22,7 +22,7 @@ export default {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Cloudflare Workers&Pages Usage数据仪表盘</title>
+  <title>Cloudflare Workers And Pages Usage数据仪表盘</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     :root {
