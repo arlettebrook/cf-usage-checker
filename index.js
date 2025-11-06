@@ -22,12 +22,13 @@ async function getCloudflareUsage(APIToken) {
     const accData = await accRes.json();
     if (!accData?.result?.length) throw new Error("未找到账户");
 
+    const accountsResults = [];
+
     // 2️⃣ 时间范围（当天 UTC 0点 ~ 当前时间）
     const now = new Date();
     now.setUTCHours(0, 0, 0, 0);
 
-    // 3️⃣ 遍历账户并获取使用量
-    const results = [];
+    // 3️⃣ 遍历每个账户获取使用量
     for (const account of accData.result) {
       const AccountID = account.id;
       const AccountName = account.name || "未知账户";
@@ -64,11 +65,10 @@ async function getCloudflareUsage(APIToken) {
       const workers = sum(accUsage?.workersInvocationsAdaptive);
       const total = pages + workers;
 
-      // 计算免费额度剩余量（每日 100000 请求）
       const FREE_LIMIT = 100000;
       const free_quota_remaining = Math.max(0, FREE_LIMIT - total);
 
-      results.push({
+      accountsResults.push({
         account_id: AccountID,
         account_name: AccountName,
         pages,
@@ -78,7 +78,7 @@ async function getCloudflareUsage(APIToken) {
       });
     }
 
-    return { success: true, accounts: results };
+    return { success: true, accounts: accountsResults };
   } catch (err) {
     return {
       success: false,
