@@ -1,6 +1,7 @@
+
 export default {
   async fetch(request, env, ctx) {
-    // 多个 Cloudflare API Token，以逗号分隔
+    // 多个 Token 以逗号分隔
     const tokens = (env.MULTI_CF_API_TOKENS || "")
       .split(",")
       .map(t => t.trim())
@@ -13,15 +14,7 @@ export default {
       );
     }
 
-    // 获取 Cloudflare 各账户使用量
     const result = await getCloudflareUsage(tokens);
-
-    // 发送 Telegram 通知
-    if (result.success && result.accounts.length) {
-      const message = formatAccountReport(result.accounts);
-      await sendTelegramNotification(env, message);
-    }
-
     return new Response(JSON.stringify(result, null, 2), {
       headers: { "Content-Type": "application/json; charset=utf-8" }
     });
@@ -29,53 +22,9 @@ export default {
 };
 
 /**
- * Telegram 通知函数
- */
-async function sendTelegramNotification(env, message) {
-  const TELEGRAM_BOT_TOKEN = env.TELEGRAM_BOT_TOKEN;
-  const TELEGRAM_CHAT_ID = env.TELEGRAM_CHAT_ID;
-
-  if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) {
-    console.warn("⚠️ 未设置 TELEGRAM_BOT_TOKEN 或 TELEGRAM_CHAT_ID");
-    return { success: false, error: "缺少 Telegram 配置" };
-  }
-
-  const telegramUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
-
-  const res = await fetch(telegramUrl, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      chat_id: TELEGRAM_CHAT_ID,
-      text: message,
-      parse_mode: "HTML"
-    })
-  });
-
-  if (!res.ok) {
-    const text = await res.text();
-    console.error("❌ Telegram 发送失败:", text);
-    return { success: false, status: res.status, message: text };
-  }
-
-  return { success: true, message: "Telegram notification sent!" };
-}
-
-/**
- * 格式化账户信息为 Telegram 消息
- */
-function formatAccountReport(accounts) {
-  return accounts.map(acc => 
-    `📦 <b>${acc.account_name}</b>\n` +
-    `📄 Pages: <code>${acc.pages}</code>\n` +
-    `⚙️ Workers: <code>${acc.workers}</code>\n` +
-    `📊 Total: <code>${acc.total}</code>\n` +
-    `💰 Free quota remaining: <code>${acc.free_quota_remaining}</code>\n`
-  ).join("\n——————————————\n");
-}
-
-/**
- * 并发执行多个异步任务（限制并发数量）
+ * 并发执行多个异步任务，限制同时运行数量
+ * @param {Array<Function>} tasks - 返回 Promise 的函数数组
+ * @param {number} concurrency - 最大同时执行数量
  */
 async function promisePool(tasks, concurrency = 5) {
   const results = [];
@@ -87,7 +36,7 @@ async function promisePool(tasks, concurrency = 5) {
 
     if (executing.length >= concurrency) {
       await Promise.race(executing);
-      // 移除已完成 Promise
+      // 移除已完成的 Promise
       for (let i = executing.length - 1; i >= 0; i--) {
         if (executing[i].done) executing.splice(i, 1);
       }
@@ -98,9 +47,6 @@ async function promisePool(tasks, concurrency = 5) {
   return results.flat();
 }
 
-/**
- * 获取多个 Cloudflare Token 的使用情况
- */
 async function getCloudflareUsage(tokens) {
   const API = "https://api.cloudflare.com/client/v4";
   const FREE_LIMIT = 100000;
@@ -113,7 +59,7 @@ async function getCloudflareUsage(tokens) {
         "Authorization": `Bearer ${APIToken}`
       };
 
-      // 获取账户列表
+      // 获取该 Token 下所有账户
       const accRes = await fetch(`${API}/accounts`, { headers: cfg });
       if (!accRes.ok) throw new Error(`账户获取失败: ${accRes.status}`);
       const accData = await accRes.json();
@@ -122,7 +68,7 @@ async function getCloudflareUsage(tokens) {
       const now = new Date();
       now.setUTCHours(0, 0, 0, 0);
 
-      // 每个账户的任务
+      // 为每个账户创建一个异步任务
       const accountTasks = accData.result.map(account => async () => {
         const AccountName = account.name || "未知账户";
 
@@ -167,14 +113,14 @@ async function getCloudflareUsage(tokens) {
         };
       });
 
-      // 限制每个 Token 下并发数量
+      // 并发执行账户查询任务（限制每个 Token 下最大 5 个并发）
       return promisePool(accountTasks, 5);
     });
 
-    // 限制 Token 并发数量
+    // 并发执行 Token 查询任务（限制同时执行 3 个 Token）
     const accountsResults = await promisePool(allTasks, 3);
 
-    return { success: true, accounts: accountsResults.flat() };
+    return { success: true, accounts: accountsResults };
   } catch (err) {
     return {
       success: false,
