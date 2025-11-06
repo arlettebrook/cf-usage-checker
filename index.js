@@ -3,7 +3,159 @@ export default {
   async fetch(request, env, ctx) {
 
 
-   // 多个 Token 以逗号分隔
+    const url = new URL(request.url);
+    const PASSWORD = env.PASSWORD || "mysecret";
+
+    // 计算 SHA-256 哈希函数
+    async function hash(str) {
+      const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
+      return Array.from(new Uint8Array(buf))
+        .map(b => b.toString(16).padStart(2, "0"))
+        .join("");
+    }
+
+    const cookie = request.headers.get("Cookie") || "";
+    const cookieMatch = cookie.match(/auth=([a-f0-9]{64})/);
+    const cookieHash = cookieMatch ? cookieMatch[1] : null;
+    const passwordHash = await hash(PASSWORD);
+    const isLoggedIn = cookieHash === passwordHash;
+
+    // 🔑 登录逻辑
+    if (url.pathname === "/login" && request.method === "POST") {
+      const formData = await request.formData();
+      const password = formData.get("password");
+      const inputHash = await hash(password);
+
+      if (inputHash === passwordHash) {
+        // ✅ 登录成功页面（带动画过渡）
+        return new Response(`
+          <!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>登录成功</title>
+  <style>
+    :root {
+      --bg-light: linear-gradient(135deg, #89f7fe, #66a6ff);
+      --bg-dark: linear-gradient(135deg, #1f1c2c, #928dab);
+      --card-bg: rgba(255, 255, 255, 0.15);
+      --text-light: #fff;
+    }
+    @media (prefers-color-scheme: dark) {
+      body {
+        background: var(--bg-dark);
+      }
+    }
+    body {
+      height: 100vh;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: var(--bg-light);
+      font-family: "Segoe UI", "Helvetica Neue", sans-serif;
+      color: var(--text-light);
+      animation: fadeIn 0.8s ease;
+      overflow: hidden;
+    }
+    .card {
+      backdrop-filter: blur(10px);
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 3rem 2.5rem;
+      text-align: center;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+      animation: popIn 0.7s ease;
+    }
+    svg {
+      width: 80px;
+      height: 80px;
+      margin-bottom: 1rem;
+      stroke-dasharray: 100;
+      stroke-dashoffset: 100;
+      animation: draw 1s ease forwards, bounce 1s ease;
+    }
+    h2 {
+      margin: 0.5rem 0;
+      font-size: 1.8rem;
+      font-weight: 600;
+      animation: fadeSlide 1s ease forwards;
+    }
+    p {
+      font-size: 1rem;
+      opacity: 0.85;
+      animation: fadeSlide 1.2s ease forwards;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes popIn {
+      from { transform: scale(0.9); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    @keyframes bounce {
+      0% { transform: scale(0.8); }
+      60% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+    @keyframes draw {
+      to { stroke-dashoffset: 0; }
+    }
+    @keyframes fadeSlide {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+  <script>
+    setTimeout(() => location.href = '/', 1500);
+  </script>
+</head>
+<body>
+  <div class="card">
+    <svg viewBox="0 0 52 52">
+      <circle cx="26" cy="26" r="25" fill="none" stroke="white" stroke-width="2"/>
+      <path fill="none" stroke="white" stroke-width="4" d="M14 27l7 7 17-17"/>
+    </svg>
+    <h2>登录成功！</h2>
+    <p>正在跳转，请稍候...</p>
+  </div>
+</body>
+</html>
+        `, {
+          headers: {
+            "Content-Type": "text/html; charset=utf-8",
+            "Set-Cookie": `auth=${inputHash}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=86400`,
+          },
+        });
+      } else {
+        // ❌ 密码错误：重新显示登录页并带上错误提示
+        return new Response(await renderLoginPage("密码错误，请重试 🔒"), {
+          headers: { "Content-Type": "text/html; charset=utf-8" },
+        });
+      }
+    }
+
+    // 🧹 登出逻辑（可选）
+    if (url.pathname === "/logout" && request.method === "POST") {
+      return new Response("<script>location.href='/'</script>", {
+        headers: {
+          "Set-Cookie": `auth=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`,
+        },
+      });
+    }
+
+    // 🚪 未登录：显示登录页
+    if (!isLoggedIn) {
+      return new Response(await renderLoginPage(), {
+        headers: { "Content-Type": "text/html; charset=utf-8" },
+      });
+    }
+
+
+
+     // 多个 Token 以逗号分隔
     const tokens = (env.MULTI_CF_API_TOKENS || "")
       .split(",")
       .map(t => t.trim())
@@ -353,158 +505,7 @@ export default {
 </html>
 `;
 
-
-    const url = new URL(request.url);
-    const PASSWORD = env.PASSWORD || "mysecret";
-
-    // 计算 SHA-256 哈希函数
-    async function hash(str) {
-      const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
-      return Array.from(new Uint8Array(buf))
-        .map(b => b.toString(16).padStart(2, "0"))
-        .join("");
-    }
-
-    const cookie = request.headers.get("Cookie") || "";
-    const cookieMatch = cookie.match(/auth=([a-f0-9]{64})/);
-    const cookieHash = cookieMatch ? cookieMatch[1] : null;
-    const passwordHash = await hash(PASSWORD);
-    const isLoggedIn = cookieHash === passwordHash;
-
-    // 🔑 登录逻辑
-    if (url.pathname === "/login" && request.method === "POST") {
-      const formData = await request.formData();
-      const password = formData.get("password");
-      const inputHash = await hash(password);
-
-      if (inputHash === passwordHash) {
-        // ✅ 登录成功页面（带动画过渡）
-        return new Response(`
-          <!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>登录成功</title>
-  <style>
-    :root {
-      --bg-light: linear-gradient(135deg, #89f7fe, #66a6ff);
-      --bg-dark: linear-gradient(135deg, #1f1c2c, #928dab);
-      --card-bg: rgba(255, 255, 255, 0.15);
-      --text-light: #fff;
-    }
-    @media (prefers-color-scheme: dark) {
-      body {
-        background: var(--bg-dark);
-      }
-    }
-    body {
-      height: 100vh;
-      margin: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background: var(--bg-light);
-      font-family: "Segoe UI", "Helvetica Neue", sans-serif;
-      color: var(--text-light);
-      animation: fadeIn 0.8s ease;
-      overflow: hidden;
-    }
-    .card {
-      backdrop-filter: blur(10px);
-      background: var(--card-bg);
-      border-radius: 16px;
-      padding: 3rem 2.5rem;
-      text-align: center;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
-      animation: popIn 0.7s ease;
-    }
-    svg {
-      width: 80px;
-      height: 80px;
-      margin-bottom: 1rem;
-      stroke-dasharray: 100;
-      stroke-dashoffset: 100;
-      animation: draw 1s ease forwards, bounce 1s ease;
-    }
-    h2 {
-      margin: 0.5rem 0;
-      font-size: 1.8rem;
-      font-weight: 600;
-      animation: fadeSlide 1s ease forwards;
-    }
-    p {
-      font-size: 1rem;
-      opacity: 0.85;
-      animation: fadeSlide 1.2s ease forwards;
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
-    @keyframes popIn {
-      from { transform: scale(0.9); opacity: 0; }
-      to { transform: scale(1); opacity: 1; }
-    }
-    @keyframes bounce {
-      0% { transform: scale(0.8); }
-      60% { transform: scale(1.1); }
-      100% { transform: scale(1); }
-    }
-    @keyframes draw {
-      to { stroke-dashoffset: 0; }
-    }
-    @keyframes fadeSlide {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-  </style>
-  <script>
-    setTimeout(() => location.href = '/', 1500);
-  </script>
-</head>
-<body>
-  <div class="card">
-    <svg viewBox="0 0 52 52">
-      <circle cx="26" cy="26" r="25" fill="none" stroke="white" stroke-width="2"/>
-      <path fill="none" stroke="white" stroke-width="4" d="M14 27l7 7 17-17"/>
-    </svg>
-    <h2>登录成功！</h2>
-    <p>正在跳转，请稍候...</p>
-  </div>
-</body>
-</html>
-        `, {
-          headers: {
-            "Content-Type": "text/html; charset=utf-8",
-            "Set-Cookie": `auth=${inputHash}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=86400`,
-          },
-        });
-      } else {
-        // ❌ 密码错误：重新显示登录页并带上错误提示
-        return new Response(await renderLoginPage("密码错误，请重试 🔒"), {
-          headers: { "Content-Type": "text/html; charset=utf-8" },
-        });
-      }
-    }
-
-    // 🧹 登出逻辑（可选）
-    if (url.pathname === "/logout" && request.method === "POST") {
-      return new Response("<script>location.href='/'</script>", {
-        headers: {
-          "Set-Cookie": `auth=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`,
-        },
-      });
-    }
-
-    // 🚪 未登录：显示登录页
-    if (!isLoggedIn) {
-      return new Response(await renderLoginPage(), {
-        headers: { "Content-Type": "text/html; charset=utf-8" },
-      });
-    }
-
-
+    
 
 
 
