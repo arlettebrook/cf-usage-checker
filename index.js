@@ -16,74 +16,115 @@ export default {
 
     const data = await getCloudflareUsage(tokens);
 
-        const html = `
+    const html = `
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" class="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Cloudflare 账户数据仪表盘</title>
+  <title>Cloudflare 数据仪表盘</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
+    :root {
+      --bg-light: linear-gradient(135deg, #f0f4ff, #e3f6f5);
+      --bg-dark: linear-gradient(135deg, #1f2937, #111827);
+      --card-light: white;
+      --card-dark: #1f2937;
+      --text-light: #1f2937;
+      --text-dark: #f9fafb;
+    }
+
     body {
-      background: linear-gradient(135deg, #f0f4ff, #e3f6f5);
+      background: var(--bg-light);
+      transition: background 0.4s ease, color 0.4s ease;
       font-family: 'Inter', sans-serif;
     }
+
+    html.dark body {
+      background: var(--bg-dark);
+      color: var(--text-dark);
+    }
+
     .card {
-      background: white;
+      background: var(--card-light);
       border-radius: 1.25rem;
       padding: 1.75rem;
       box-shadow: 0 10px 25px rgba(0,0,0,0.05);
       border: 1px solid rgba(255,255,255,0.7);
-      transition: all 0.3s ease;
+      transition: all 0.4s ease;
       position: relative;
       overflow: hidden;
     }
-    .card::before {
-      content: "";
-      position: absolute;
-      top: -50%;
-      left: -50%;
-      width: 200%;
-      height: 200%;
-      background: radial-gradient(circle at center, rgba(99,102,241,0.05), transparent 70%);
-      transform: rotate(25deg);
+
+    html.dark .card {
+      background: var(--card-dark);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+      border: 1px solid rgba(255,255,255,0.1);
     }
+
     .card:hover {
       transform: translateY(-5px) scale(1.02);
       box-shadow: 0 15px 40px rgba(99,102,241,0.15);
     }
+
     .progress {
       transition: width 1s ease;
     }
+
     .num {
       transition: all 0.4s ease-out;
     }
+
+    /* 主题切换按钮样式 */
+    #theme-toggle {
+      position: absolute;
+      top: 1.25rem;
+      right: 1.5rem;
+      background: rgba(255,255,255,0.6);
+      border: none;
+      backdrop-filter: blur(10px);
+      padding: 0.5rem 0.9rem;
+      border-radius: 9999px;
+      cursor: pointer;
+      font-size: 1.1rem;
+      transition: all 0.3s ease;
+    }
+
+    html.dark #theme-toggle {
+      background: rgba(255,255,255,0.1);
+      color: white;
+    }
+
+    #theme-toggle:hover {
+      transform: scale(1.1);
+    }
   </style>
 </head>
-<body class="flex flex-col items-center p-8">
+<body class="flex flex-col items-center p-8 relative">
+  <button id="theme-toggle" title="切换主题">🌗</button>
+
   <header class="mb-10 text-center">
-    <h1 class="text-4xl font-extrabold text-indigo-600 drop-shadow-sm">🌤️ Cloudflare 数据仪表盘</h1>
-    <p class="text-gray-600 mt-2">账户使用情况可视化展示</p>
+    <h1 class="text-4xl font-extrabold text-indigo-600 dark:text-indigo-400 drop-shadow-sm">🌤️ Cloudflare 数据仪表盘</h1>
+    <p class="text-gray-600 dark:text-gray-300 mt-2">账户使用情况可视化展示</p>
   </header>
 
   <main class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 w-full max-w-6xl">
     ${data.accounts.map(acc => {
       const usedPercent = (acc.total / (acc.total + acc.free_quota_remaining) * 100).toFixed(1);
       return `
-      <div class="card backdrop-blur-sm relative">
-        <h2 class="text-2xl font-semibold text-gray-800 mb-4">${acc.account_name}</h2>
-        <div class="space-y-2 text-gray-700">
+      <div class="card">
+        <h2 class="text-2xl font-semibold mb-4">${acc.account_name}</h2>
+        <div class="space-y-2">
           <p><strong>📄 Pages:</strong> <span class="num" data-value="${acc.pages}">0</span></p>
           <p><strong>⚙️ Workers:</strong> <span class="num" data-value="${acc.workers}">0</span></p>
           <p><strong>📦 总计:</strong> <span class="num" data-value="${acc.total}">0</span></p>
           <p><strong>🎁 免费额度剩余:</strong> <span class="num" data-value="${acc.free_quota_remaining}">0</span></p>
         </div>
         <div class="mt-5">
-          <div class="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+          <div class="w-full bg-gray-300 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
             <div class="bg-gradient-to-r from-green-400 to-blue-500 h-3 rounded-full progress" style="width: ${usedPercent}%"></div>
           </div>
-          <p class="text-sm text-gray-500 mt-2 text-right">${usedPercent}% 已使用</p>
+          <p class="text-sm mt-2 text-right">${usedPercent}% 已使用</p>
         </div>
       </div>
       `;
@@ -108,6 +149,25 @@ export default {
         }
         el.textContent = Math.floor(count).toLocaleString();
       }, 20);
+    });
+
+    // 主题切换逻辑
+    const root = document.documentElement;
+    const toggle = document.getElementById('theme-toggle');
+
+    // 根据系统偏好或本地设置初始化
+    if (localStorage.getItem('theme') === 'dark' ||
+        (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      root.classList.add('dark');
+    }
+
+    toggle.addEventListener('click', () => {
+      root.classList.toggle('dark');
+      if (root.classList.contains('dark')) {
+        localStorage.setItem('theme', 'dark');
+      } else {
+        localStorage.setItem('theme', 'light');
+      }
     });
   </script>
 </body>
