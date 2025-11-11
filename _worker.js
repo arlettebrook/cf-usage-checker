@@ -523,7 +523,8 @@ function dashboardHTML(data) {
   </main>
 
   <footer>
-    ©2025 Cloudflare Usage Dashboard • <a href="https://github.com/arlettebrook" target="_blank">Arlettebrook</a>
+    © 2025 Cloudflare Worker Dashboard • Designed with 💜 by 
+    <a href="https://github.com/arlettebrook" target="_blank">Arlettebrook</a>
   </footer>
 
   <script>
