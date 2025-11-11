@@ -126,20 +126,24 @@ function loginSuccess(hash) {
     <title>登录成功</title>
     <script src="https://cdn.tailwindcss.com"></script>
   </head>
-  <body class="h-screen m-0 flex items-center justify-center bg-gradient-to-tr from-violet-600 to-cyan-400 text-white font-sans">
-    <div class="p-8 rounded-2xl bg-white/10 backdrop-blur-md text-center shadow-lg animate-fade-in">
-      <div class="text-5xl mb-2">✅</div>
-      <p class="text-lg font-medium">登录成功，正在跳转…</p>
+  <body class="h-screen flex items-center justify-center bg-gradient-to-tr from-indigo-500 via-purple-500 to-sky-400 text-white font-sans">
+    <div class="p-8 rounded-3xl bg-white/15 backdrop-blur-lg shadow-2xl text-center animate-fade-in">
+      <div class="text-6xl mb-3 drop-shadow-md">✅</div>
+      <p class="text-xl font-semibold tracking-wide">登录成功，正在跳转…</p>
     </div>
+
     <script>
       setTimeout(() => location.href = '/', 1200);
     </script>
+
     <style>
       @keyframes fade-in {
         from { opacity: 0; transform: scale(0.95); }
         to { opacity: 1; transform: scale(1); }
       }
-      .animate-fade-in { animation: fade-in 0.5s ease-out; }
+      .animate-fade-in {
+        animation: fade-in 0.6s ease-out forwards;
+      }
     </style>
   </body>
 </html>`;
