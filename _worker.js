@@ -264,18 +264,15 @@ function dashboardHTML(data) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>🌤️ Cloudflare Workers & Pages Usage Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
-
   <style>
     :root {
-      /* 亮色主题 */
       --bg-light: linear-gradient(135deg, #f9fafb, #eff6ff, #ecfdf5);
-      --card-light: rgba(255, 255, 255, 0.85);
+      --card-light: rgba(255, 255, 255, 0.8);
       --text-light: #1e293b;
       --accent-light: #2563eb;
       --border-light: rgba(0, 0, 0, 0.08);
       --progress-light: linear-gradient(90deg, #10b981, #3b82f6, #8b5cf6);
 
-      /* 暗色主题 */
       --bg-dark: radial-gradient(circle at top left, #0f172a, #1e293b, #111827);
       --card-dark: rgba(30, 41, 59, 0.8);
       --text-dark: #f1f5f9;
@@ -294,13 +291,11 @@ function dashboardHTML(data) {
       min-height: 100vh;
       background-attachment: fixed;
     }
-
     html.dark body {
       background: var(--bg-dark);
       color: var(--text-dark);
     }
 
-    /* 顶部导航 */
     .navbar {
       width: 100%;
       display: flex;
@@ -323,16 +318,23 @@ function dashboardHTML(data) {
       font-weight: 700;
       font-size: clamp(1.2rem, 4vw, 1.75rem);
       text-align: center;
+      text-shadow: 0 2px 10px rgba(255,255,255,0.35);
       flex: 1 1 100%;
       margin-bottom: 0.75rem;
-      text-shadow: 0 2px 10px rgba(255,255,255,0.35);
     }
-
     @media (min-width: 640px) {
-      .navbar h1 { flex: 0 1 auto; margin-bottom: 0; text-align: left; }
+      .navbar h1 {
+        flex: 0 1 auto;
+        margin-bottom: 0;
+        text-align: left;
+      }
     }
 
-    .nav-btn { display: flex; gap: 0.75rem; justify-content: center; }
+    .nav-btn {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: center;
+    }
 
     .nav-btn button {
       background: rgba(255,255,255,0.25);
@@ -341,6 +343,7 @@ function dashboardHTML(data) {
       border: none;
       color: white;
       font-weight: 500;
+      letter-spacing: 0.3px;
       cursor: pointer;
       backdrop-filter: blur(6px);
       transition: all 0.3s ease;
@@ -352,7 +355,6 @@ function dashboardHTML(data) {
       box-shadow: 0 4px 10px rgba(255,255,255,0.25);
     }
 
-    /* 卡片 */
     .card {
       background: var(--card-light);
       border-radius: var(--radius);
@@ -361,21 +363,19 @@ function dashboardHTML(data) {
       border: 1px solid var(--border-light);
       transition: all 0.4s ease;
       backdrop-filter: blur(10px);
+      text-align: left;
       position: relative;
       overflow: hidden;
     }
-
     html.dark .card {
       background: var(--card-dark);
       border: 1px solid var(--border-dark);
       box-shadow: 0 12px 30px rgba(0,0,0,0.4);
     }
-
     .card:hover {
       transform: translateY(-5px) scale(1.02);
       box-shadow: 0 20px 40px rgba(99,102,241,0.25);
     }
-
     .card::before {
       content: "";
       position: absolute;
@@ -387,7 +387,6 @@ function dashboardHTML(data) {
       transform: rotate(25deg);
       z-index: 0;
     }
-
     .card h2 {
       font-size: 1.35rem;
       font-weight: 700;
@@ -396,8 +395,9 @@ function dashboardHTML(data) {
       position: relative;
       z-index: 1;
     }
-
-    html.dark .card h2 { color: var(--accent-dark); }
+    html.dark .card h2 {
+      color: var(--accent-dark);
+    }
 
     .card .content {
       position: relative;
@@ -406,20 +406,17 @@ function dashboardHTML(data) {
       line-height: 1.7;
       color: inherit;
     }
-
     .card p {
       display: flex;
       justify-content: space-between;
       margin: 0.25rem 0;
     }
-
     .num {
       font-weight: 700;
       font-size: 1.05rem;
       color: inherit;
     }
 
-    /* 进度条 */
     .progress-bar {
       width: 100%;
       height: 0.75rem;
@@ -427,18 +424,18 @@ function dashboardHTML(data) {
       border-radius: 9999px;
       overflow: hidden;
       margin-top: 0.8rem;
+      position: relative;
     }
-
-    html.dark .progress-bar { background-color: rgba(255,255,255,0.1); }
-
+    html.dark .progress-bar {
+      background-color: rgba(255,255,255,0.1);
+    }
     .progress {
       height: 100%;
       background: var(--progress-light);
       border-radius: 9999px;
-      transition: width 1.5s ease-in-out;
+      transition: width 1s ease-in-out;
       box-shadow: 0 0 10px rgba(59,130,246,0.4);
     }
-
     html.dark .progress {
       background: var(--progress-dark);
       box-shadow: 0 0 10px rgba(129,140,248,0.3);
@@ -457,126 +454,127 @@ function dashboardHTML(data) {
       opacity: 0.85;
       font-size: 0.9rem;
     }
-
     footer a {
       background: linear-gradient(90deg, #6366f1, #10b981);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      text-decoration: none;
       font-weight: 600;
-      transition: all 0.3s ease;
+      text-decoration: none;
     }
-
     footer a:hover {
       filter: brightness(1.3);
-      text-shadow: 0 0 8px rgba(99,102,241,0.4);
     }
 
-    .animated-bg {
-      position: absolute;
+    /* ===== Loading 层 ===== */
+    #loading-screen {
+      position: fixed;
       inset: 0;
-      z-index: -1;
-      background: radial-gradient(circle at 20% 30%, #a5b4fc22, transparent 40%),
-                  radial-gradient(circle at 80% 70%, #67e8f922, transparent 40%);
-      animation: floatBg 12s ease-in-out infinite alternate;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255,255,255,0.85);
+      color: #1e293b;
+      backdrop-filter: blur(10px);
+      z-index: 9999;
+      transition: opacity 0.7s ease;
     }
-
-    @keyframes floatBg {
-      from { transform: translateY(0px); }
-      to { transform: translateY(-20px); }
+    html.dark #loading-screen {
+      background: rgba(0,0,0,0.7);
+      color: #f1f5f9;
+    }
+    #loading-spinner {
+      width: 48px;
+      height: 48px;
+      border: 4px solid rgba(96,165,250,0.3);
+      border-top-color: #3b82f6;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 16px;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
     }
   </style>
 </head>
 
 <body class="flex flex-col items-center p-6 relative overflow-x-hidden">
-  <div class="animated-bg"></div>
+  <!-- Loading 层 -->
+  <div id="loading-screen">
+    <div id="loading-spinner"></div>
+    <p>正在加载数据，请稍候...</p>
+  </div>
 
   <nav class="navbar">
     <h1>🌤️ Cloudflare Workers & Pages Usage 仪表盘</h1>
     <div class="nav-btn">
       <button id="refresh-btn">🔄 刷新数据</button>
       <button id="theme-toggle">🌗 切换主题</button>
-      <form id="logoutForm" method="POST" action="/logout" style="margin:0;">
-        <button type="submit" class="bg-white/25 px-4 py-2 rounded-full text-white font-medium hover:bg-white/40 transition">⎋ 登出</button>
-      </form>
     </div>
   </nav>
 
-  <main id="grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 w-full max-w-6xl">
-    ${accounts.map(a=>{
-      const used=((a.total/(a.total+a.free_quota_remaining||1))*100).toFixed(1);
+  <main id="data-section" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 w-full max-w-6xl">
+    ${accounts.map(a => {
+      const used = ((a.total / (a.total + a.free_quota_remaining || 1)) * 100).toFixed(1);
       return `
       <div class="card">
         <h2>${a.account_name}</h2>
         <div class="content">
-          <p><strong>📄 Pages：</strong><span class="num" data-value="${a.pages}">0</span></p>
-          <p><strong>⚙️ Workers：</strong><span class="num" data-value="${a.workers}">0</span></p>
-          <p><strong>📦 总计：</strong><span class="num" data-value="${a.total}">0</span></p>
-          <p><strong>🎁 免费额度剩余：</strong><span class="num" data-value="${a.free_quota_remaining}">0</span></p>
+          <p>📄 Pages：<span class="num" data-value="${a.pages}">0</span></p>
+          <p>⚙️ Workers：<span class="num" data-value="${a.workers}">0</span></p>
+          <p>📦 总计：<span class="num" data-value="${a.total}">0</span></p>
+          <p>🎁 免费额度剩余：<span class="num" data-value="${a.free_quota_remaining}">0</span></p>
         </div>
-        <div class="progress-bar">
-          <div class="progress" style="width:0%"></div>
-        </div>
-        <p class="progress-text">0% 已使用</p>
+        <div class="progress-bar"><div class="progress" style="width:${used}%"></div></div>
+        <p class="progress-text">${used}% 已使用</p>
       </div>`;
     }).join('')}
   </main>
 
-  <footer>
-    © 2025 Cloudflare Worker Dashboard • Designed with 💜 by 
-    <a href="https://github.com/arlettebrook" target="_blank">Arlettebrook</a>
-  </footer>
+  <footer>©2025 Cloudflare Worker Dashboard • Designed with 💜 by <a href="https://github.com/arlettebrook" target="_blank">Arlettebrook</a></footer>
 
   <script>
-    const root=document.documentElement;
-    const toggle=document.getElementById('theme-toggle');
-    const refresh=document.getElementById('refresh-btn');
-
-    if(localStorage.getItem('theme')==='dark' ||
-      (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)){
-      root.classList.add('dark');
+    // 数字动画
+    function animateNumbers() {
+      document.querySelectorAll('.num').forEach(el => {
+        const target = +el.dataset.value;
+        let count = 0;
+        const step = target / 60;
+        const timer = setInterval(() => {
+          count += step;
+          if (count >= target) {
+            count = target;
+            clearInterval(timer);
+          }
+          el.textContent = Math.floor(count).toLocaleString();
+        }, 20);
+      });
     }
 
-    toggle.addEventListener('click',()=>{
+    // Loading 淡出
+    window.addEventListener('load', () => {
+      animateNumbers();
+      const loader = document.getElementById('loading-screen');
+      loader.style.opacity = '0';
+      setTimeout(() => loader.remove(), 700);
+    });
+
+    // 刷新按钮
+    document.getElementById('refresh-btn').addEventListener('click', () => {
+      document.body.style.opacity = '0.6';
+      setTimeout(() => location.reload(), 300);
+    });
+
+    // 主题切换
+    const root = document.documentElement;
+    const toggle = document.getElementById('theme-toggle');
+    if (localStorage.getItem('theme') === 'dark' ||
+        (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      root.classList.add('dark');
+    }
+    toggle.addEventListener('click', () => {
       root.classList.toggle('dark');
-      localStorage.setItem('theme', root.classList.contains('dark')?'dark':'light');
-    });
-
-    refresh.addEventListener('click',()=>{
-      document.body.style.opacity='0.6';
-      setTimeout(()=>location.reload(),300);
-    });
-
-    // 动画显示数字
-    document.querySelectorAll('.num').forEach(el=>{
-      const target=+el.dataset.value;
-      let count=0;
-      const step=target/60;
-      const timer=setInterval(()=>{
-        count+=step;
-        if(count>=target){count=target;clearInterval(timer);}
-        el.textContent=Math.floor(count).toLocaleString();
-      },20);
-    });
-
-    // 进度条动画
-    document.querySelectorAll('.card').forEach((card,i)=>{
-      const bar=card.querySelector('.progress');
-      const text=card.querySelector('.progress-text');
-      const used=((parseFloat(card.querySelector('[data-value]').dataset.value)/1)||0);
-      const target=parseFloat(card.querySelector('.progress').style.width.replace('%',''))||0;
-      const percent=parseFloat(card.querySelector('.content p:nth-child(3) .num').dataset.value)/
-                    (parseFloat(card.querySelector('.content p:nth-child(3) .num').dataset.value)+
-                     parseFloat(card.querySelector('.content p:nth-child(4) .num').dataset.value)) *100;
-      let progress=0;
-      const animate=()=>{
-        progress+=percent/50;
-        if(progress>=percent)progress=percent;
-        bar.style.width=progress+'%';
-        text.textContent=progress.toFixed(1)+'% 已使用';
-        if(progress<percent)requestAnimationFrame(animate);
-      };
-      setTimeout(()=>requestAnimationFrame(animate),200*i);
+      localStorage.setItem('theme', root.classList.contains('dark') ? 'dark' : 'light');
     });
   </script>
 </body>
