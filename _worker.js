@@ -118,13 +118,31 @@ async function loginPage(message = "") {
 
 // 登录成功页面（简洁过渡）
 function loginSuccess(hash) {
-  return `<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>登录成功</title><style>html,body{height:100%;margin:0}body{display:flex;align-items:center;justify-content:center;
-  font-family:Inter,Segoe UI;background:linear-gradient(120deg,#7c3aed,#06b6d4);color:#fff}
-  .badge{padding:28px;border-radius:16px;background:rgba(255,255,255,0.08);backdrop-filter:blur(8px);text-align:center}
-  .tick{font-size:40px;margin-bottom:8px}p{margin:0}</style></head><body>
-  <div class="badge"><div class="tick">✅</div><p>登录成功，正在跳转…</p></div>
-  <script>setTimeout(()=>location.href='/',1200)</script></body></html>`;
+  return `<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>登录成功</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="h-screen m-0 flex items-center justify-center bg-gradient-to-tr from-violet-600 to-cyan-400 text-white font-sans">
+    <div class="p-8 rounded-2xl bg-white/10 backdrop-blur-md text-center shadow-lg animate-fade-in">
+      <div class="text-5xl mb-2">✅</div>
+      <p class="text-lg font-medium">登录成功，正在跳转…</p>
+    </div>
+    <script>
+      setTimeout(() => location.href = '/', 1200);
+    </script>
+    <style>
+      @keyframes fade-in {
+        from { opacity: 0; transform: scale(0.95); }
+        to { opacity: 1; transform: scale(1); }
+      }
+      .animate-fade-in { animation: fade-in 0.5s ease-out; }
+    </style>
+  </body>
+</html>`;
 }
 
 // ======= 并发池（修复完成处理） =======
