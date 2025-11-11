@@ -262,183 +262,257 @@ function dashboardHTML(data) {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Cloudflare Workers & Pages Usage 仪表盘</title>
+<title>Cloudflare Usage Dashboard</title>
 <style>
   :root {
-    --bg-dark: #0a0f1e;
-    --card-bg: rgba(255, 255, 255, 0.05);
-    --text-main: #e2e8f0;
-    --accent1: #6366f1;
-    --accent2: #06b6d4;
-    --accent3: #8b5cf6;
-    --blur: blur(20px);
-  }
-  html, body {
-    height: 100%;
-    margin: 0;
-    font-family: "Inter","Segoe UI",system-ui,sans-serif;
-    background: radial-gradient(ellipse at top left, #1e1b4b, #0a0f1e);
-    background-attachment: fixed;
-    color: var(--text-main);
-    transition: all .6s ease;
-    overflow-x: hidden;
-  }
-  body.light {
-    background: linear-gradient(135deg, #c7d2fe 0%, #a5f3fc 100%);
-    color: #0f172a;
+    --bg-dark: #0b1220;
+    --card-dark: rgba(30,41,59,0.8);
+    --border-dark: rgba(255,255,255,0.05);
+    --text-light: #e2e8f0;
+    --accent-dark: #3b82f6;
+
+    --bg-light: #f4f7fb;
+    --card-light: #ffffffd9;
+    --border-light: rgba(0,0,0,0.08);
+    --text-dark: #1e293b;
+    --accent-light: #2563eb;
+
+    --gradient-dark: linear-gradient(145deg,#3b82f6,#06b6d4,#8b5cf6);
+    --gradient-light: linear-gradient(145deg,#60a5fa,#a78bfa,#34d399);
+
+    --transition: all .3s ease;
   }
 
-  /* ====== 顶部仪表盘卡片 ====== */
+  body {
+    margin:0;
+    font-family:"Inter","Segoe UI",system-ui,sans-serif;
+    background:var(--bg-dark);
+    color:var(--text-light);
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    transition:var(--transition);
+  }
+
+  body.light {
+    background:var(--bg-light);
+    color:var(--text-dark);
+  }
+
+  /* 顶部卡片 */
   .topbar {
-    max-width: 480px;
-    margin: 40px auto 20px;
-    padding: 24px 20px;
-    border-radius: 24px;
-    background: linear-gradient(135deg, rgba(99,102,241,0.25), rgba(6,182,212,0.25));
-    box-shadow: 0 10px 40px rgba(0,0,0,0.4);
-    backdrop-filter: var(--blur);
-    border: 1px solid rgba(255,255,255,0.1);
-    text-align: center;
+    background:var(--gradient-dark);
+    padding:28px 24px;
+    border-radius:28px;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.1),
+               0 8px 30px rgba(0,0,0,0.3);
+    color:#fff;
+    margin:32px 20px 20px;
+    text-align:center;
+    max-width:420px;
+    width:calc(100% - 40px);
+    transition:var(--transition);
   }
+
+  body.light .topbar {
+    background:var(--gradient-light);
+    color:#fff;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.2),
+               0 8px 20px rgba(0,0,0,0.1);
+  }
+
   .topbar h1 {
-    font-size: 1.2rem;
-    font-weight: 600;
-    margin-bottom: 16px;
-    color: #fff;
+    margin:0 0 20px;
+    font-size:1.2rem;
+    font-weight:600;
   }
+
   .btns {
-    display: flex;
-    justify-content: center;
-    gap: 16px;
+    display:flex;
+    justify-content:center;
+    gap:16px;
   }
   .btn {
-    background: rgba(255,255,255,0.08);
-    border: 1px solid rgba(255,255,255,0.15);
-    border-radius: 14px;
-    padding: 10px 18px;
-    font-size: .9rem;
-    font-weight: 500;
-    color: #fff;
-    cursor: pointer;
-    transition: all .25s ease;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    flex:1;
+    border:none;
+    border-radius:18px;
+    padding:10px 0;
+    color:#fff;
+    font-weight:600;
+    background:rgba(255,255,255,0.15);
+    box-shadow:0 4px 12px rgba(0,0,0,0.3),
+               inset 0 1px 0 rgba(255,255,255,0.2);
+    backdrop-filter:blur(6px);
+    cursor:pointer;
+    transition:all .25s ease;
   }
   .btn:hover {
-    background: rgba(255,255,255,0.15);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0,0,0,0.35);
+    background:rgba(255,255,255,0.25);
+    transform:translateY(-2px);
   }
 
-  /* ====== 主体卡片 ====== */
+  body.light .btn {
+    background:rgba(255,255,255,0.4);
+    color:var(--text-dark);
+    box-shadow:0 4px 10px rgba(0,0,0,0.1);
+  }
+  body.light .btn:hover {
+    background:rgba(255,255,255,0.7);
+  }
+
+  /* 主体卡片 */
   main {
-    display: grid;
-    grid-template-columns: repeat(auto-fit,minmax(320px,1fr));
-    gap: 24px;
-    max-width: 800px;
-    margin: 0 auto 50px;
-    padding: 0 20px;
+    width:calc(100% - 40px);
+    max-width:420px;
+    display:flex;
+    flex-direction:column;
+    gap:20px;
+    margin-bottom:40px;
   }
+
   .card {
-    background: var(--card-bg);
-    border-radius: 22px;
-    border: 1px solid rgba(255,255,255,0.1);
-    box-shadow: 0 10px 25px rgba(0,0,0,0.4);
-    backdrop-filter: var(--blur);
-    padding: 20px 24px;
-    opacity: 0;
-    transform: translateY(20px);
-    transition: all .7s cubic-bezier(.25,.8,.25,1);
+    background:var(--card-dark);
+    border:1px solid var(--border-dark);
+    border-radius:24px;
+    padding:22px;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.05),
+               0 8px 25px rgba(0,0,0,0.3);
+    backdrop-filter:blur(12px);
+    transform:translateY(20px);
+    opacity:0;
+    transition:var(--transition);
   }
+
+  body.light .card {
+    background:var(--card-light);
+    border:1px solid var(--border-light);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.8),
+               0 8px 20px rgba(0,0,0,0.1);
+  }
+
   .card.show {
-    opacity: 1;
-    transform: translateY(0);
+    opacity:1;
+    transform:translateY(0);
   }
-  h2 {
-    margin: 0 0 10px;
-    color: #60a5fa;
-    font-weight: 600;
+
+  .card h2 {
+    margin:0 0 12px;
+    font-size:1.1rem;
+    color:var(--accent-dark);
+    transition:var(--transition);
   }
+
+  body.light .card h2 {
+    color:var(--accent-light);
+  }
+
   .meta {
-    font-size: .95rem;
-    line-height: 1.8;
-  }
-  .meta b {
-    color: #f1f5f9;
-    font-weight: 600;
+    line-height:1.8;
+    font-size:.95rem;
   }
 
-  /* ====== 进度条 ====== */
   .progress {
-    height: 10px;
-    border-radius: 999px;
-    background: rgba(255,255,255,0.1);
-    overflow: hidden;
-    margin-top: 14px;
+    margin-top:10px;
+    height:8px;
+    border-radius:999px;
+    background:rgba(255,255,255,0.1);
+    overflow:hidden;
   }
+  body.light .progress {
+    background:rgba(0,0,0,0.08);
+  }
+
   .fill {
-    height: 100%;
-    border-radius: 999px;
-    background: linear-gradient(90deg, var(--accent1), var(--accent2), var(--accent3));
-    background-size: 200% 100%;
-    animation: move 3s linear infinite;
-    transition: width .8s ease;
+    height:100%;
+    border-radius:999px;
+    background:linear-gradient(90deg,#22c55e,#3b82f6,#8b5cf6);
+    background-size:200% 100%;
+    animation:move 3s linear infinite;
+    transition:width .8s ease;
   }
-  @keyframes move { 0% { background-position: 0% } 100% { background-position: -200% } }
+  @keyframes move {
+    0% {background-position:0%}
+    100% {background-position:-200%}
+  }
+
   .usage-text {
-    font-size: .85rem;
-    margin-top: 8px;
-    opacity: .8;
+    font-size:.85rem;
+    margin-top:6px;
+    opacity:.8;
   }
 
-  /* ====== 骨架加载 ====== */
+  /* 骨架加载 */
   .skeleton {
-    height: 150px;
-    border-radius: 22px;
-    background: linear-gradient(100deg,rgba(255,255,255,.1) 40%,rgba(255,255,255,.2) 50%,rgba(255,255,255,.1) 60%);
-    background-size: 200% 100%;
-    animation: skeletonMove 1.5s infinite linear;
+    height:140px;
+    border-radius:24px;
+    background:linear-gradient(100deg,rgba(255,255,255,.06) 40%,rgba(255,255,255,.1) 50%,rgba(255,255,255,.06) 60%);
+    background-size:200% 100%;
+    animation:skeletonMove 1.4s infinite linear;
   }
-  @keyframes skeletonMove { 100% { background-position: -200% 0; } }
-
-  /* ====== 底部 ====== */
-  footer {
-    text-align: center;
-    opacity: .7;
-    margin-bottom: 24px;
-    font-size: .85rem;
+  @keyframes skeletonMove {
+    100%{background-position:-200% 0}
   }
-  footer a { color: #60a5fa; text-decoration: underline; }
 
-  /* ====== 加载遮罩 ====== */
+  /* 加载遮罩 */
   #loader {
-    position: fixed; inset: 0;
-    background: var(--bg-dark);
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    color: #fff; font-weight: 600; letter-spacing: .5px; font-size: 1rem;
-    z-index: 99;
-    animation: fadeOut .7s ease 1.2s forwards;
+    position:fixed;
+    inset:0;
+    background:#0b1220;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    color:#fff;
+    z-index:99;
+    font-weight:600;
+    animation:fadeOut .8s ease 1.2s forwards;
   }
-  @keyframes fadeOut { to { opacity: 0; visibility: hidden; } }
-  .dots { display: flex; gap: 8px; margin-top: 12px; }
+  body.light #loader {
+    background:#f4f7fb;
+    color:#1e293b;
+  }
+
+  @keyframes fadeOut {
+    to {opacity:0;visibility:hidden;}
+  }
+  .dots {
+    display:flex;gap:8px;margin-top:12px;
+  }
   .dot {
-    width: 10px; height: 10px; border-radius: 50%; background: #fff; opacity: .3;
-    animation: blink .9s infinite alternate;
+    width:10px;height:10px;border-radius:50%;
+    background:#fff;opacity:.3;
+    animation:blink .9s infinite alternate;
   }
-  .dot:nth-child(2) { animation-delay: .2s; }
-  .dot:nth-child(3) { animation-delay: .4s; }
-  @keyframes blink { from { opacity: .3; transform: scale(.9); } to { opacity: 1; transform: scale(1.3); } }
+  .dot:nth-child(2){animation-delay:.2s;}
+  .dot:nth-child(3){animation-delay:.4s;}
+  @keyframes blink {
+    from{opacity:.3;transform:scale(.9)}
+    to{opacity:1;transform:scale(1.3)}
+  }
+
+  footer {
+    text-align:center;
+    font-size:.8rem;
+    opacity:.6;
+    margin-bottom:20px;
+    transition:var(--transition);
+  }
+  footer a{color:#60a5fa;text-decoration:none;}
+  body.light footer a{color:#2563eb;}
 </style>
 </head>
 <body>
-  <div id="loader">加载中<div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div>
+  <div id="loader">加载中
+    <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+  </div>
 
   <div class="topbar">
     <h1>🌤️ Cloudflare Workers & Pages Usage 仪表盘</h1>
     <div class="btns">
-      <button id="refresh" class="btn">🔁 刷新数据</button>
-      <button id="theme" class="btn">🌙 切换主题</button>
-      <form id="logoutForm" method="POST" action="/logout" style="display:inline">
+      <button id="refresh" class="btn">🔄 刷新数据</button>
+      <button id="theme" class="btn">🌗 切换主题</button>
+      <form id="logoutForm" method="POST" action="/logout" style="margin:0;">
         <button type="submit" class="btn">⎋ 登出</button>
       </form>
     </div>
@@ -455,11 +529,13 @@ function dashboardHTML(data) {
     const grid=document.getElementById('grid');
     const themeBtn=document.getElementById('theme');
     const refresh=document.getElementById('refresh');
-    let light=localStorage.getItem('theme')==='light';
-    if(light) document.body.classList.add('light');
-
     const formatNumber=n=>n?.toLocaleString?.()||n;
     const escapeHtml=s=>String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+
+    // 主题状态记忆
+    if(localStorage.getItem('theme')==='light'){
+      document.body.classList.add('light');
+    }
 
     window.addEventListener('load',()=>{
       loader.style.pointerEvents='none';
@@ -482,16 +558,16 @@ function dashboardHTML(data) {
       },250);
     });
 
-    refresh.onclick=()=>{document.body.style.opacity=.7;setTimeout(()=>location.reload(),200)};
+    refresh.onclick=()=>{document.body.style.opacity=.6;setTimeout(()=>location.reload(),200)};
     themeBtn.onclick=()=>{
-      light=!light;
-      document.body.classList.toggle('light',light);
-      localStorage.setItem('theme',light?'light':'dark');
+      document.body.classList.toggle('light');
+      localStorage.setItem('theme',document.body.classList.contains('light')?'light':'dark');
     };
   </script>
 </body>
 </html>`;
 }
+
 // ======= 工具函数（后端/渲染帮助） =======
 function formatNumber(n) {
   if (n == null) return '0';
