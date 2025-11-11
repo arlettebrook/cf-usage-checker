@@ -236,6 +236,8 @@ async function usage(tokens) {
 function dashboardHTML(data) {
   const accounts = Array.isArray(data.accounts) ? data.accounts : [];
 
+accounts.sort((a, b) => (b.total || 0) - (a.total || 0));
+
   return `<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
