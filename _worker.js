@@ -31,8 +31,8 @@ export default {
 
     // 登出
     if (url.pathname === "/logout" && request.method === "POST") {
-      return new Response("<script>location.href='/'</script>", {
-        headers: { "set-cookie": "auth=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0" }
+      return new Response(await loginPage(), {
+        headers: { "set-cookie": "auth=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0"; "content-type": "text/html; charset=utf-8" }
       });
     }
 
