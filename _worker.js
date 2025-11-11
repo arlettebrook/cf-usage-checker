@@ -62,103 +62,54 @@ async function loginPage(message = "") {
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>安全登录</title>
+  <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    :root{
-      --card-radius:18px;
-      --glass: rgba(255,255,255,0.12);
-      --glass-strong: rgba(255,255,255,0.18);
-      --accent1:#6366f1;
-      --accent2:#06b6d4;
-      --accent3:#8b5cf6;
-      --text: #ffffff;
-      --muted: rgba(255,255,255,0.85);
-      --error-bg: rgba(239,68,68,0.12);
-      --error: #fee2e2;
+    @keyframes gradientMove {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
     }
-    *{box-sizing:border-box}
-    html,body{height:100%;margin:0}
-    body{
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-family:Inter,"Segoe UI",system-ui, -apple-system, "Helvetica Neue", Arial;
-      background:linear-gradient(120deg,var(--accent1),var(--accent2),var(--accent3));
-      background-size:300% 300%;
-      animation: bgMove 14s ease-in-out infinite;
-      -webkit-font-smoothing:antialiased;
-      -moz-osx-font-smoothing:grayscale;
-      color:var(--text);
-      padding:24px;
-    }
-    @keyframes bgMove{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
-    .stage{
-      width:100%;
-      max-width:420px;
-      margin:auto;
-      position:relative;
-    }
-    .ghost-glow{
-      position:absolute;inset:auto 0 -10% 0;height:200px;border-radius:50%;
-      background:radial-gradient(closest-side, rgba(255,255,255,0.08), transparent 40%);
-      filter:blur(40px);pointer-events:none;
-    }
-    .card{
-      background:var(--glass);
-      border-radius:var(--card-radius);
-      padding:28px;
-      box-shadow:
-        0 6px 24px rgba(14, 18, 35, 0.28),
-        inset 0 1px 0 rgba(255,255,255,0.03);
-      backdrop-filter: blur(12px) saturate(120%);
-      border: 1px solid rgba(255,255,255,0.06);
-      transform:translateY(6px);
-      transition: transform .45s cubic-bezier(.2,.9,.2,1), box-shadow .45s;
-    }
-    .card:hover{ transform:translateY(0); box-shadow:0 18px 60px rgba(14,18,35,0.38) }
-    h1{font-size:20px;margin:0 0 8px 0;letter-spacing:0.2px}
-    p.lead{margin:0 0 16px 0;color:var(--muted);font-size:14px;line-height:1.6}
-    form{display:flex;flex-direction:column;gap:12px}
-    input[type="password"]{
-      width:100%;padding:12px 14px;border-radius:12px;border:1px solid rgba(255,255,255,0.06);
-      background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));
-      color:var(--text);font-size:15px;outline:none;transition:box-shadow .25s, transform .15s;
-      line-height:1.3;text-align:center;
-    }
-    input[type="password"]::placeholder{color:rgba(255,255,255,0.75)}
-    input[type="password"]:focus{box-shadow:0 8px 30px rgba(99,102,241,0.16);transform:translateY(-1px)}
-    .controls{display:flex;gap:12px;align-items:center}
-    button.cta{
-      flex:1;padding:10px 14px;border-radius:999px;border:0;background:
-      linear-gradient(90deg, rgba(59,130,246,0.95), rgba(139,92,246,0.95));
-      color:white;font-weight:600;cursor:pointer;box-shadow:0 8px 30px rgba(99,102,241,0.18);
-      transition:transform .18s cubic-bezier(.2,.9,.2,1), box-shadow .25s;
-    }
-    button.cta:active{transform:translateY(1px)}
-    button.cta:focus{outline:3px solid rgba(99,102,241,0.15);outline-offset:3px}
-    .secondary{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:9px 12px;border-radius:999px;color:var(--text)}
-    .error{
-      margin-top:6px;padding:10px;border-radius:10px;background:var(--error-bg);
-      color:var(--error);font-size:13px;border:1px solid rgba(255,255,255,0.04)
-    }
-    .footer{margin-top:14px;text-align:center;color:rgba(255,255,255,0.78);font-size:13px}
-    @media (max-width:420px){ .card{padding:20px} h1{font-size:18px} }
   </style>
 </head>
-<body>
-  <div class="stage">
-    <div class="ghost-glow" aria-hidden="true"></div>
-    <div class="card" role="region" aria-label="登录面板">
-      <h1>🔐 受保护的仪表盘访问</h1>
-      <p class="lead">请输入预设密码以访问 Cloudflare 使用量仪表盘。</p>
-      <form method="POST" action="/login" autocomplete="off">
-        <input type="password" name="password" placeholder="输入访问密码" required aria-label="密码">
-        <div class="controls">
-          <button type="submit" class="cta">登录</button>
-          <button type="button" class="secondary" onclick="document.querySelector('input[name=password]').value='';document.querySelector('input[name=password]').focus();">清除</button>
-        </div>
-        ${message ? `<div class="error" role="alert">${message}</div>` : ''}
-      </form>
-      <div class="footer">Cloudflare Workers • 受保护访问</div>
+<body class="flex items-center justify-center min-h-screen bg-gradient-to-tr from-indigo-500 via-cyan-400 to-purple-500 bg-[length:300%_300%] animate-[gradientMove_14s_ease-in-out_infinite] text-white font-[Inter,'Segoe_UI',system-ui,-apple-system,'Helvetica_Neue',Arial] antialiased p-6">
+  <div class="relative w-full max-w-sm mx-auto">
+    <div class="absolute inset-x-0 -bottom-10 h-48 rounded-full bg-[radial-gradient(closest-side,rgba(255,255,255,0.08),transparent_40%)] blur-3xl pointer-events-none"></div>
+    
+    <div class="relative bg-white/10 border border-white/10 backdrop-blur-xl rounded-2xl shadow-xl transition-all duration-500 hover:translate-y-0 hover:shadow-[0_18px_60px_rgba(14,18,35,0.38)] transform translate-y-1.5">
+      <div class="p-7 md:p-8">
+        <h1 class="text-lg font-semibold mb-2">🔐 受保护的仪表盘访问</h1>
+        <p class="text-sm text-white/80 mb-5 leading-relaxed">请输入预设密码以访问 Cloudflare 使用量仪表盘。</p>
+
+        <form method="POST" action="/login" autocomplete="off" class="flex flex-col gap-3">
+          <input
+            type="password"
+            name="password"
+            required
+            placeholder="输入访问密码"
+            aria-label="密码"
+            class="w-full px-4 py-3 text-center text-base text-white placeholder-white/70 bg-white/5 border border-white/10 rounded-xl outline-none focus:ring-2 focus:ring-indigo-400 focus:translate-y-[-1px] transition-all duration-150"
+          />
+          <div class="flex gap-3 items-center">
+            <button
+              type="submit"
+              class="flex-1 py-2.5 rounded-full font-semibold bg-gradient-to-r from-blue-500 to-purple-500 shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/30 transition-transform duration-200 active:translate-y-0.5"
+            >
+              登录
+            </button>
+            <button
+              type="button"
+              onclick="document.querySelector('input[name=password]').value='';document.querySelector('input[name=password]').focus();"
+              class="px-4 py-2.5 border border-white/10 rounded-full text-white/90 hover:bg-white/10 transition"
+            >
+              清除
+            </button>
+          </div>
+
+          ${message ? `<div class="mt-2 p-3 rounded-lg bg-red-500/10 border border-white/10 text-red-200 text-sm" role="alert">${message}</div>` : ''}
+        </form>
+
+        <div class="text-center text-white/70 text-xs mt-5">Cloudflare Workers • 受保护访问</div>
+      </div>
     </div>
   </div>
 </body>
