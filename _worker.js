@@ -265,22 +265,23 @@ function dashboardHTML(data) {
 <title>Cloudflare Usage Dashboard</title>
 <style>
   :root {
-    --bg-dark: #0b1220;
-    --card-dark: rgba(30,41,59,0.8);
+    /* 暗色主题变量 */
+    --bg-dark: #050b16;
+    --card-dark: rgba(17,25,40,0.8);
     --border-dark: rgba(255,255,255,0.05);
     --text-light: #e2e8f0;
-    --accent-dark: #3b82f6;
+    --accent-dark: #60a5fa;
+    --gradient-dark: linear-gradient(145deg,#3b82f6,#06b6d4,#8b5cf6);
 
-    --bg-light: #f4f7fb;
-    --card-light: #ffffffd9;
+    /* 亮色主题变量 */
+    --bg-light: #f5f7fb;
+    --card-light: rgba(255,255,255,0.9);
     --border-light: rgba(0,0,0,0.08);
     --text-dark: #1e293b;
     --accent-light: #2563eb;
-
-    --gradient-dark: linear-gradient(145deg,#3b82f6,#06b6d4,#8b5cf6);
     --gradient-light: linear-gradient(145deg,#60a5fa,#a78bfa,#34d399);
 
-    --transition: all .3s ease;
+    --transition: all .35s ease;
   }
 
   body {
@@ -293,39 +294,42 @@ function dashboardHTML(data) {
     flex-direction:column;
     align-items:center;
     transition:var(--transition);
+    background-attachment: fixed;
+    background-image: radial-gradient(circle at 20% 20%, rgba(59,130,246,0.1), transparent 60%), 
+                      radial-gradient(circle at 80% 80%, rgba(139,92,246,0.1), transparent 60%);
   }
 
   body.light {
     background:var(--bg-light);
     color:var(--text-dark);
+    background-image: radial-gradient(circle at 20% 20%, rgba(59,130,246,0.05), transparent 60%), 
+                      radial-gradient(circle at 80% 80%, rgba(139,92,246,0.05), transparent 60%);
   }
 
-  /* 顶部卡片 */
+  /* 顶部栏 */
   .topbar {
     background:var(--gradient-dark);
-    padding:28px 24px;
+    padding:32px 26px;
     border-radius:28px;
-    box-shadow:inset 0 1px 0 rgba(255,255,255,0.1),
-               0 8px 30px rgba(0,0,0,0.3);
+    box-shadow:0 12px 40px rgba(0,0,0,0.4);
     color:#fff;
-    margin:32px 20px 20px;
+    margin:40px 20px 24px;
     text-align:center;
-    max-width:420px;
+    max-width:460px;
     width:calc(100% - 40px);
     transition:var(--transition);
   }
 
   body.light .topbar {
     background:var(--gradient-light);
-    color:#fff;
-    box-shadow:inset 0 1px 0 rgba(255,255,255,0.2),
-               0 8px 20px rgba(0,0,0,0.1);
+    box-shadow:0 8px 25px rgba(0,0,0,0.15);
   }
 
   .topbar h1 {
-    margin:0 0 20px;
-    font-size:1.2rem;
-    font-weight:600;
+    margin:0 0 22px;
+    font-size:1.25rem;
+    font-weight:700;
+    letter-spacing:0.02em;
   }
 
   .btns {
@@ -333,62 +337,62 @@ function dashboardHTML(data) {
     justify-content:center;
     gap:16px;
   }
+
   .btn {
     flex:1;
     border:none;
     border-radius:18px;
-    padding:10px 0;
+    padding:11px 0;
     color:#fff;
     font-weight:600;
     background:rgba(255,255,255,0.15);
-    box-shadow:0 4px 12px rgba(0,0,0,0.3),
-               inset 0 1px 0 rgba(255,255,255,0.2);
-    backdrop-filter:blur(6px);
+    box-shadow:0 4px 12px rgba(0,0,0,0.4);
+    backdrop-filter:blur(8px);
     cursor:pointer;
     transition:all .25s ease;
   }
+
   .btn:hover {
     background:rgba(255,255,255,0.25);
     transform:translateY(-2px);
+    box-shadow:0 6px 14px rgba(0,0,0,0.45), 0 0 10px rgba(255,255,255,0.2);
+  }
+
+  .btn:active {
+    transform:scale(0.96);
   }
 
   body.light .btn {
-    background:rgba(255,255,255,0.4);
-    color:var(--text-dark);
-    box-shadow:0 4px 10px rgba(0,0,0,0.1);
-  }
-  body.light .btn:hover {
     background:rgba(255,255,255,0.7);
+    color:var(--text-dark);
+    box-shadow:0 3px 8px rgba(0,0,0,0.1);
   }
 
-  /* 主体卡片 */
+  body.light .btn:hover {
+    background:rgba(255,255,255,0.9);
+    box-shadow:0 6px 12px rgba(0,0,0,0.15);
+  }
+
+  /* 卡片区 */
   main {
     width:calc(100% - 40px);
-    max-width:420px;
+    max-width:460px;
     display:flex;
     flex-direction:column;
-    gap:20px;
-    margin-bottom:40px;
+    gap:22px;
+    margin-bottom:50px;
   }
 
   .card {
     background:var(--card-dark);
     border:1px solid var(--border-dark);
     border-radius:24px;
-    padding:22px;
-    box-shadow:inset 0 1px 0 rgba(255,255,255,0.05),
-               0 8px 25px rgba(0,0,0,0.3);
-    backdrop-filter:blur(12px);
+    padding:24px 26px;
+    box-shadow:0 8px 28px rgba(0,0,0,0.35);
+    backdrop-filter:blur(14px);
     transform:translateY(20px);
     opacity:0;
-    transition:var(--transition);
-  }
-
-  body.light .card {
-    background:var(--card-light);
-    border:1px solid var(--border-light);
-    box-shadow:inset 0 1px 0 rgba(255,255,255,0.8),
-               0 8px 20px rgba(0,0,0,0.1);
+    transition:all .8s cubic-bezier(.2,.9,.2,1);
   }
 
   .card.show {
@@ -396,9 +400,25 @@ function dashboardHTML(data) {
     transform:translateY(0);
   }
 
+  .card:hover {
+    transform:translateY(-4px);
+    box-shadow:0 12px 36px rgba(0,0,0,0.5), 0 0 18px rgba(59,130,246,0.25);
+  }
+
+  body.light .card {
+    background:var(--card-light);
+    border:1px solid var(--border-light);
+    box-shadow:0 8px 25px rgba(0,0,0,0.08);
+  }
+
+  body.light .card:hover {
+    box-shadow:0 10px 28px rgba(0,0,0,0.12), 0 0 14px rgba(96,165,250,0.15);
+  }
+
   .card h2 {
     margin:0 0 12px;
     font-size:1.1rem;
+    font-weight:600;
     color:var(--accent-dark);
     transition:var(--transition);
   }
@@ -413,14 +433,11 @@ function dashboardHTML(data) {
   }
 
   .progress {
-    margin-top:10px;
-    height:8px;
+    margin-top:12px;
+    height:10px;
     border-radius:999px;
     background:rgba(255,255,255,0.1);
     overflow:hidden;
-  }
-  body.light .progress {
-    background:rgba(0,0,0,0.08);
   }
 
   .fill {
@@ -428,9 +445,11 @@ function dashboardHTML(data) {
     border-radius:999px;
     background:linear-gradient(90deg,#22c55e,#3b82f6,#8b5cf6);
     background-size:200% 100%;
+    box-shadow:0 0 10px rgba(59,130,246,0.4);
     animation:move 3s linear infinite;
     transition:width .8s ease;
   }
+
   @keyframes move {
     0% {background-position:0%}
     100% {background-position:-200%}
@@ -438,11 +457,11 @@ function dashboardHTML(data) {
 
   .usage-text {
     font-size:.85rem;
-    margin-top:6px;
+    margin-top:8px;
     opacity:.8;
   }
 
-  /* 骨架加载 */
+  /* 加载骨架 */
   .skeleton {
     height:140px;
     border-radius:24px;
@@ -450,6 +469,7 @@ function dashboardHTML(data) {
     background-size:200% 100%;
     animation:skeletonMove 1.4s infinite linear;
   }
+
   @keyframes skeletonMove {
     100%{background-position:-200% 0}
   }
@@ -458,7 +478,7 @@ function dashboardHTML(data) {
   #loader {
     position:fixed;
     inset:0;
-    background:#0b1220;
+    background:#050b16;
     display:flex;
     flex-direction:column;
     align-items:center;
@@ -468,24 +488,34 @@ function dashboardHTML(data) {
     font-weight:600;
     animation:fadeOut .8s ease 1.2s forwards;
   }
+
   body.light #loader {
-    background:#f4f7fb;
+    background:#f5f7fb;
     color:#1e293b;
   }
 
   @keyframes fadeOut {
     to {opacity:0;visibility:hidden;}
   }
+
   .dots {
-    display:flex;gap:8px;margin-top:12px;
+    display:flex;
+    gap:8px;
+    margin-top:12px;
   }
+
   .dot {
-    width:10px;height:10px;border-radius:50%;
-    background:#fff;opacity:.3;
+    width:10px;
+    height:10px;
+    border-radius:50%;
+    background:#fff;
+    opacity:.3;
     animation:blink .9s infinite alternate;
   }
+
   .dot:nth-child(2){animation-delay:.2s;}
   .dot:nth-child(3){animation-delay:.4s;}
+
   @keyframes blink {
     from{opacity:.3;transform:scale(.9)}
     to{opacity:1;transform:scale(1.3)}
@@ -498,6 +528,7 @@ function dashboardHTML(data) {
     margin-bottom:20px;
     transition:var(--transition);
   }
+
   footer a{color:#60a5fa;text-decoration:none;}
   body.light footer a{color:#2563eb;}
 </style>
@@ -532,7 +563,6 @@ function dashboardHTML(data) {
     const formatNumber=n=>n?.toLocaleString?.()||n;
     const escapeHtml=s=>String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
 
-    // 主题状态记忆
     if(localStorage.getItem('theme')==='light'){
       document.body.classList.add('light');
     }
