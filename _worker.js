@@ -257,368 +257,326 @@ async function usage(tokens) {
 function dashboardHTML(data) {
   const accounts = Array.isArray(data.accounts) ? data.accounts : [];
 
-  return `<!doctype html>
+  return `<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Cloudflare Usage Dashboard</title>
-<style>
-  :root {
-    --radius: 26px;
-    --transition: all .35s cubic-bezier(.4,0,.2,1);
-    --gradient-dark: linear-gradient(135deg,#3b82f6,#06b6d4,#8b5cf6);
-    --gradient-light: linear-gradient(135deg,#60a5fa,#a78bfa,#34d399);
-    --text-glow: 0 0 14px rgba(96,165,250,0.6);
-  }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🌤️ Cloudflare Workers & Pages Usage Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
 
-  body {
-    margin:0;
-    font-family:"Inter","Segoe UI",system-ui,sans-serif;
-    background:radial-gradient(circle at 25% 20%,#0f172a 0%,#0b1120 70%);
-    color:#e2e8f0;
-    min-height:100vh;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    transition:var(--transition);
-    background-attachment: fixed;
-  }
+  <style>
+    :root {
+      /* 亮色主题 */
+      --bg-light: linear-gradient(135deg, #f9fafb, #eff6ff, #ecfdf5);
+      --card-light: rgba(255, 255, 255, 0.85);
+      --text-light: #1e293b;
+      --accent-light: #2563eb;
+      --border-light: rgba(0, 0, 0, 0.08);
+      --progress-light: linear-gradient(90deg, #10b981, #3b82f6, #8b5cf6);
 
-  body.light {
-    background:linear-gradient(180deg,#f9fafb,#edf2f7);
-    color:#1e293b;
-  }
+      /* 暗色主题 */
+      --bg-dark: radial-gradient(circle at top left, #0f172a, #1e293b, #111827);
+      --card-dark: rgba(30, 41, 59, 0.8);
+      --text-dark: #f1f5f9;
+      --accent-dark: #60a5fa;
+      --border-dark: rgba(255, 255, 255, 0.08);
+      --progress-dark: linear-gradient(90deg, #38bdf8, #818cf8, #c084fc);
 
-  /* 顶部栏 */
-  .topbar {
-    background:var(--gradient-dark);
-    padding:42px 28px;
-    border-radius:calc(var(--radius) + 8px);
-    box-shadow:0 15px 45px rgba(0,0,0,0.4);
-    color:#fff;
-    margin:48px 20px 36px;
-    text-align:center;
-    max-width:520px;
-    width:calc(100% - 40px);
-    position:relative;
-    overflow:hidden;
-  }
+      --radius: 1.25rem;
+    }
 
-  body.light .topbar {
-    background:var(--gradient-light);
-    box-shadow:0 8px 30px rgba(0,0,0,0.15);
-  }
+    body {
+      background: var(--bg-light);
+      color: var(--text-light);
+      font-family: 'Inter', 'Segoe UI', sans-serif;
+      transition: all 0.4s ease-in-out;
+      min-height: 100vh;
+      background-attachment: fixed;
+    }
 
-  .topbar h1 {
-    margin:0 0 24px;
-    font-size:1.6rem;
-    font-weight:800;
-    letter-spacing:.04em;
-    text-shadow:var(--text-glow);
-    animation:breath 4s ease-in-out infinite;
-  }
+    html.dark body {
+      background: var(--bg-dark);
+      color: var(--text-dark);
+    }
 
-  @keyframes breath {
-    0%,100% { text-shadow:0 0 6px rgba(96,165,250,0.4); }
-    50% { text-shadow:0 0 18px rgba(96,165,250,0.8); }
-  }
+    /* 顶部导航 */
+    .navbar {
+      width: 100%;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      background: linear-gradient(90deg, #6366f1, #3b82f6, #06b6d4);
+      padding: 1rem 1.5rem;
+      border-radius: var(--radius);
+      color: white;
+      box-shadow: 0 10px 30px rgba(99,102,241,0.25);
+      backdrop-filter: blur(16px);
+      margin-bottom: 2rem;
+      position: sticky;
+      top: 1rem;
+      z-index: 50;
+    }
 
-  /* 按钮组 */
-  .btns {
-    display:flex;
-    justify-content:center;
-    flex-wrap:wrap;
-    gap:12px;
-  }
+    .navbar h1 {
+      font-weight: 700;
+      font-size: clamp(1.2rem, 4vw, 1.75rem);
+      text-align: center;
+      flex: 1 1 100%;
+      margin-bottom: 0.75rem;
+      text-shadow: 0 2px 10px rgba(255,255,255,0.35);
+    }
 
-  .btn {
-    flex:1;
-    border:none;
-    border-radius:18px;
-    padding:12px 0;
-    font-weight:600;
-    background:rgba(255,255,255,0.18);
-    color:#fff;
-    backdrop-filter:blur(8px);
-    cursor:pointer;
-    transition:var(--transition);
-    box-shadow:0 4px 10px rgba(0,0,0,0.3);
-    position:relative;
-    overflow:hidden;
-    min-width:120px;
-  }
+    @media (min-width: 640px) {
+      .navbar h1 { flex: 0 1 auto; margin-bottom: 0; text-align: left; }
+    }
 
-  .btn::before {
-    content:"";
-    position:absolute;
-    inset:0;
-    background:radial-gradient(circle at center,rgba(255,255,255,0.4),transparent 70%);
-    opacity:0;
-    transform:scale(0);
-    transition:opacity .4s,transform .4s;
-  }
+    .nav-btn { display: flex; gap: 0.75rem; justify-content: center; }
 
-  .btn:hover::before { opacity:.3; transform:scale(3); }
-  .btn:hover { transform:translateY(-2px) scale(1.03); }
-  body.light .btn { background:rgba(255,255,255,0.7); color:#1e293b; }
+    .nav-btn button {
+      background: rgba(255,255,255,0.25);
+      padding: 0.6rem 1.2rem;
+      border-radius: 9999px;
+      border: none;
+      color: white;
+      font-weight: 500;
+      cursor: pointer;
+      backdrop-filter: blur(6px);
+      transition: all 0.3s ease;
+    }
 
-  /* 主体布局 */
-  main {
-    width:calc(100% - 40px);
-    max-width:520px;
-    display:flex;
-    flex-direction:column;
-    gap:28px;
-    margin-bottom:60px;
-  }
+    .nav-btn button:hover {
+      background: rgba(255,255,255,0.4);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 10px rgba(255,255,255,0.25);
+    }
 
-  /* 卡片模式 */
-  .card {
-    background:rgba(24,32,51,0.78);
-    border:1px solid rgba(255,255,255,0.06);
-    border-radius:var(--radius);
-    padding:28px;
-    box-shadow:0 10px 35px rgba(0,0,0,0.35);
-    backdrop-filter:blur(16px);
-    transform:translateY(30px) scale(0.98);
-    opacity:0;
-    transition:var(--transition);
-    position:relative;
-    overflow:hidden;
-  }
+    /* 卡片 */
+    .card {
+      background: var(--card-light);
+      border-radius: var(--radius);
+      padding: 1.75rem;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+      border: 1px solid var(--border-light);
+      transition: all 0.4s ease;
+      backdrop-filter: blur(10px);
+      position: relative;
+      overflow: hidden;
+    }
 
-  .card.show { opacity:1; transform:translateY(0) scale(1); animation:popIn .6s ease-out; }
+    html.dark .card {
+      background: var(--card-dark);
+      border: 1px solid var(--border-dark);
+      box-shadow: 0 12px 30px rgba(0,0,0,0.4);
+    }
 
-  @keyframes popIn {
-    0% {transform:translateY(30px) scale(0.95);opacity:0;}
-    100% {transform:translateY(0) scale(1);opacity:1;}
-  }
+    .card:hover {
+      transform: translateY(-5px) scale(1.02);
+      box-shadow: 0 20px 40px rgba(99,102,241,0.25);
+    }
 
-  .card:hover {
-    transform:translateY(-5px) scale(1.015);
-    box-shadow:0 12px 40px rgba(59,130,246,0.35);
-  }
+    .card::before {
+      content: "";
+      position: absolute;
+      top: -40%;
+      left: -40%;
+      width: 180%;
+      height: 180%;
+      background: radial-gradient(circle at top left, rgba(99,102,241,0.15), transparent 70%);
+      transform: rotate(25deg);
+      z-index: 0;
+    }
 
-  body.light .card {
-    background:rgba(255,255,255,0.95);
-    border:1px solid rgba(0,0,0,0.05);
-    box-shadow:0 8px 25px rgba(0,0,0,0.08);
-  }
+    .card h2 {
+      font-size: 1.35rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      color: var(--accent-light);
+      position: relative;
+      z-index: 1;
+    }
 
-  .card h2 {
-    margin:0 0 14px;
-    font-size:1.15rem;
-    font-weight:700;
-    background:linear-gradient(90deg,#60a5fa,#a78bfa,#34d399);
-    -webkit-background-clip:text;
-    -webkit-text-fill-color:transparent;
-  }
+    html.dark .card h2 { color: var(--accent-dark); }
 
-  .meta {
-    line-height:1.8;
-    font-size:.94rem;
-    color:#a1aecb;
-  }
+    .card .content {
+      position: relative;
+      z-index: 1;
+      font-size: 1rem;
+      line-height: 1.7;
+      color: inherit;
+    }
 
-  /* 进度条 */
-  .progress {
-    margin-top:16px;
-    height:12px;
-    border-radius:999px;
-    background:rgba(255,255,255,0.12);
-    overflow:hidden;
-    position:relative;
-  }
+    .card p {
+      display: flex;
+      justify-content: space-between;
+      margin: 0.25rem 0;
+    }
 
-  body.light .progress { background:rgba(0,0,0,0.08); }
+    .num {
+      font-weight: 700;
+      font-size: 1.05rem;
+      color: inherit;
+    }
 
-  .fill {
-    height:100%;
-    border-radius:999px;
-    background:linear-gradient(90deg,#22c55e,#3b82f6,#8b5cf6,#3b82f6,#22c55e);
-    background-size:300% 100%;
-    animation:move 4s linear infinite;
-    box-shadow:0 0 14px rgba(59,130,246,0.35);
-    width:0%;
-    position:relative;
-  }
+    /* 进度条 */
+    .progress-bar {
+      width: 100%;
+      height: 0.75rem;
+      background-color: rgba(0,0,0,0.1);
+      border-radius: 9999px;
+      overflow: hidden;
+      margin-top: 0.8rem;
+    }
 
-  body.light .fill {
-    background:linear-gradient(90deg,#34d399,#60a5fa,#a78bfa);
-    box-shadow:0 0 6px rgba(59,130,246,0.2);
-  }
+    html.dark .progress-bar { background-color: rgba(255,255,255,0.1); }
 
-  @keyframes move {
-    0% {background-position:0%}
-    100% {background-position:-300%}
-  }
+    .progress {
+      height: 100%;
+      background: var(--progress-light);
+      border-radius: 9999px;
+      transition: width 1.5s ease-in-out;
+      box-shadow: 0 0 10px rgba(59,130,246,0.4);
+    }
 
-  /* Tooltip */
-  .fill::after {
-    content:attr(data-tooltip);
-    position:absolute;
-    top:-34px;
-    right:0;
-    transform:translateX(50%);
-    padding:5px 10px;
-    font-size:.75rem;
-    color:#fff;
-    background:rgba(30,41,59,0.9);
-    border-radius:6px;
-    white-space:nowrap;
-    opacity:0;
-    pointer-events:none;
-    transition:opacity .3s, transform .3s;
-  }
+    html.dark .progress {
+      background: var(--progress-dark);
+      box-shadow: 0 0 10px rgba(129,140,248,0.3);
+    }
 
-  body.light .fill::after {
-    background:rgba(255,255,255,0.95);
-    color:#1e293b;
-  }
+    .progress-text {
+      font-size: 0.85rem;
+      margin-top: 0.4rem;
+      text-align: right;
+      opacity: 0.75;
+    }
 
-  .fill:hover::after {
-    opacity:1;
-    transform:translateX(50%) translateY(-6px);
-  }
+    footer {
+      margin-top: 3rem;
+      text-align: center;
+      opacity: 0.85;
+      font-size: 0.9rem;
+    }
 
-  .usage-text {
-    font-size:.85rem;
-    margin-top:10px;
-    color:#94a3b8;
-    opacity:.85;
-    text-align:right;
-  }
+    footer a {
+      background: linear-gradient(90deg, #6366f1, #10b981);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-decoration: none;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
 
-  /* 紧凑模式 */
-  body.compact .card {
-    border-radius:14px;
-    padding:16px 18px;
-    box-shadow:none;
-    background:rgba(24,32,51,0.55);
-  }
+    footer a:hover {
+      filter: brightness(1.3);
+      text-shadow: 0 0 8px rgba(99,102,241,0.4);
+    }
 
-  body.light.compact .card {
-    background:rgba(255,255,255,0.85);
-  }
+    .animated-bg {
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      background: radial-gradient(circle at 20% 30%, #a5b4fc22, transparent 40%),
+                  radial-gradient(circle at 80% 70%, #67e8f922, transparent 40%);
+      animation: floatBg 12s ease-in-out infinite alternate;
+    }
 
-  body.compact .card:hover { transform:none; box-shadow:none; }
-  body.compact .meta { line-height:1.6; font-size:.9rem; }
-  body.compact .progress { height:8px; }
-
-  /* Skeleton & Loader */
-  .skeleton {
-    height:150px;
-    border-radius:var(--radius);
-    background:linear-gradient(100deg,rgba(255,255,255,.06) 40%,rgba(255,255,255,.1) 50%,rgba(255,255,255,.06) 60%);
-    background-size:200% 100%;
-    animation:skeletonMove 1.4s infinite linear;
-  }
-  @keyframes skeletonMove { 100%{background-position:-200% 0} }
-
-  #loader {
-    position:fixed;
-    inset:0;
-    background:#0b1120;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    justify-content:center;
-    color:#fff;
-    z-index:99;
-    font-weight:600;
-    animation:fadeOut .8s ease 1.2s forwards;
-  }
-  @keyframes fadeOut {to {opacity:0;visibility:hidden;}}
-  @keyframes blink {to{opacity:.9;transform:scale(1.2);}}
-</style>
+    @keyframes floatBg {
+      from { transform: translateY(0px); }
+      to { transform: translateY(-20px); }
+    }
+  </style>
 </head>
-<body>
-  <div id="loader">加载中
-    <div style="display:flex;gap:8px;margin-top:12px;">
-      <div style="width:10px;height:10px;border-radius:50%;background:#fff;opacity:.3;animation:blink .9s infinite alternate;"></div>
-      <div style="width:10px;height:10px;border-radius:50%;background:#fff;opacity:.3;animation:blink .9s .2s infinite alternate;"></div>
-      <div style="width:10px;height:10px;border-radius:50%;background:#fff;opacity:.3;animation:blink .9s .4s infinite alternate;"></div>
-    </div>
-  </div>
 
-  <div class="topbar">
+<body class="flex flex-col items-center p-6 relative overflow-x-hidden">
+  <div class="animated-bg"></div>
+
+  <nav class="navbar">
     <h1>🌤️ Cloudflare Workers & Pages Usage 仪表盘</h1>
-    <div class="btns">
-      <button id="refresh" class="btn">🔄 刷新数据</button>
-      <button id="theme" class="btn">🌗 切换主题</button>
-      <button id="view" class="btn">🧭 视图模式</button>
+    <div class="nav-btn">
+      <button id="refresh-btn">🔄 刷新数据</button>
+      <button id="theme-toggle">🌗 切换主题</button>
       <form id="logoutForm" method="POST" action="/logout" style="margin:0;">
-        <button type="submit" class="btn">⎋ 登出</button>
+        <button type="submit" class="bg-white/25 px-4 py-2 rounded-full text-white font-medium hover:bg-white/40 transition">⎋ 登出</button>
       </form>
     </div>
-  </div>
+  </nav>
 
-  <main id="grid">
-    ${[...Array(Math.max(3, accounts.length || 3))].map(()=>`<div class="skeleton"></div>`).join("")}
+  <main id="grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 w-full max-w-6xl">
+    ${accounts.map(a=>{
+      const used=((a.total/(a.total+a.free_quota_remaining||1))*100).toFixed(1);
+      return `
+      <div class="card">
+        <h2>${a.account_name}</h2>
+        <div class="content">
+          <p><strong>📄 Pages：</strong><span class="num" data-value="${a.pages}">0</span></p>
+          <p><strong>⚙️ Workers：</strong><span class="num" data-value="${a.workers}">0</span></p>
+          <p><strong>📦 总计：</strong><span class="num" data-value="${a.total}">0</span></p>
+          <p><strong>🎁 免费额度剩余：</strong><span class="num" data-value="${a.free_quota_remaining}">0</span></p>
+        </div>
+        <div class="progress-bar">
+          <div class="progress" style="width:0%"></div>
+        </div>
+        <p class="progress-text">0% 已使用</p>
+      </div>`;
+    }).join('')}
   </main>
 
-  <footer style="text-align:center;font-size:.8rem;opacity:.65;margin-bottom:24px;">©2025 <a href="https://github.com/arlettebrook" target="_blank" style="color:#60a5fa;text-decoration:none;">Arlettebrook</a></footer>
+  <footer>
+    ©2025 Cloudflare Usage Dashboard • <a href="https://github.com/arlettebrook" target="_blank">Arlettebrook</a>
+  </footer>
 
   <script>
-    const grid=document.getElementById('grid');
-    const themeBtn=document.getElementById('theme');
-    const viewBtn=document.getElementById('view');
-    const refresh=document.getElementById('refresh');
-    const formatNumber=n=>n?.toLocaleString?.()||n;
-    const escapeHtml=s=>String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+    const root=document.documentElement;
+    const toggle=document.getElementById('theme-toggle');
+    const refresh=document.getElementById('refresh-btn');
 
-    // 恢复主题与视图设置
-    if(localStorage.getItem('theme')==='light') document.body.classList.add('light');
-    if(localStorage.getItem('view')==='compact') document.body.classList.add('compact');
+    if(localStorage.getItem('theme')==='dark' ||
+      (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)){
+      root.classList.add('dark');
+    }
 
-    window.addEventListener('load',()=>{
-      setTimeout(()=>{
-        grid.innerHTML=\`${accounts.map(a=>{
-          const used=((a.total/(a.total+a.free_quota_remaining||1))*100).toFixed(1);
-          return `<div class="card">
-            <h2>${escapeHtml(a.account_name)}</h2>
-            <div class="meta">
-              📄 Pages：<b>${formatNumber(a.pages)}</b><br>
-              ⚙️ Workers：<b>${formatNumber(a.workers)}</b><br>
-              📦 总计：<b>${formatNumber(a.total)}</b><br>
-              🎁 免费额度剩余：<b>${formatNumber(a.free_quota_remaining)}</b>
-            </div>
-            <div class="progress"><div class="fill" data-target="${used}" data-tooltip="已使用 ${used}% | 剩余 ${(100-used).toFixed(1)}%"></div></div>
-            <div class="usage-text"><span class="percent">0</span>% 已使用</div>
-          </div>`;
-        }).join("")}\`;
-
-        document.querySelectorAll('.card').forEach((c,i)=>{
-          setTimeout(()=>{
-            c.classList.add('show');
-            const fill=c.querySelector('.fill');
-            const percentEl=c.querySelector('.percent');
-            const target=parseFloat(fill.dataset.target);
-            let progress=0;
-            const step=()=>{
-              progress+=target/40;
-              if(progress>=target) progress=target;
-              fill.style.width=progress+'%';
-              percentEl.textContent=progress.toFixed(1);
-              if(progress<target) requestAnimationFrame(step);
-            };
-            requestAnimationFrame(step);
-          },180*i);
-        });
-      },350);
+    toggle.addEventListener('click',()=>{
+      root.classList.toggle('dark');
+      localStorage.setItem('theme', root.classList.contains('dark')?'dark':'light');
     });
 
-    // 按钮功能
-    refresh.onclick=()=>{document.body.style.opacity=.6;setTimeout(()=>location.reload(),200)};
-    themeBtn.onclick=()=>{
-      document.body.classList.toggle('light');
-      localStorage.setItem('theme',document.body.classList.contains('light')?'light':'dark');
-    };
-    viewBtn.onclick=()=>{
-      document.body.classList.toggle('compact');
-      localStorage.setItem('view',document.body.classList.contains('compact')?'compact':'card');
-    };
+    refresh.addEventListener('click',()=>{
+      document.body.style.opacity='0.6';
+      setTimeout(()=>location.reload(),300);
+    });
+
+    // 动画显示数字
+    document.querySelectorAll('.num').forEach(el=>{
+      const target=+el.dataset.value;
+      let count=0;
+      const step=target/60;
+      const timer=setInterval(()=>{
+        count+=step;
+        if(count>=target){count=target;clearInterval(timer);}
+        el.textContent=Math.floor(count).toLocaleString();
+      },20);
+    });
+
+    // 进度条动画
+    document.querySelectorAll('.card').forEach((card,i)=>{
+      const bar=card.querySelector('.progress');
+      const text=card.querySelector('.progress-text');
+      const used=((parseFloat(card.querySelector('[data-value]').dataset.value)/1)||0);
+      const target=parseFloat(card.querySelector('.progress').style.width.replace('%',''))||0;
+      const percent=parseFloat(card.querySelector('.content p:nth-child(3) .num').dataset.value)/
+                    (parseFloat(card.querySelector('.content p:nth-child(3) .num').dataset.value)+
+                     parseFloat(card.querySelector('.content p:nth-child(4) .num').dataset.value)) *100;
+      let progress=0;
+      const animate=()=>{
+        progress+=percent/50;
+        if(progress>=percent)progress=percent;
+        bar.style.width=progress+'%';
+        text.textContent=progress.toFixed(1)+'% 已使用';
+        if(progress<percent)requestAnimationFrame(animate);
+      };
+      setTimeout(()=>requestAnimationFrame(animate),200*i);
+    });
   </script>
 </body>
 </html>`;
