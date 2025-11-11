@@ -264,49 +264,136 @@ function dashboardHTML(data) {
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Cloudflare Usage Dashboard</title>
 <style>
-  html,body{height:100%;margin:0;font-family:Inter,"Segoe UI",system-ui,sans-serif;
-    background:linear-gradient(120deg,#6366f1,#06b6d4,#8b5cf6);
-    background-size:300% 300%;animation:bg 14s ease infinite;color:#fff;overflow-x:hidden;transition:background 1s ease}
-  @keyframes bg{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
-  .topbar{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;
-    background:rgba(255,255,255,.1);backdrop-filter:blur(8px);border-radius:16px;margin:20px;
-    box-shadow:0 6px 20px rgba(0,0,0,.25);transition:background .5s ease}
-  .btn{background:rgba(255,255,255,.15);border:none;border-radius:999px;padding:8px 14px;
-    color:#fff;font-weight:600;cursor:pointer;transition:all .25s}
-  .btn:hover{background:rgba(255,255,255,.25);transform:translateY(-2px)}
-  main{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px;padding:20px}
-  .card{padding:18px;border-radius:18px;background:rgba(255,255,255,.12);
-    box-shadow:0 10px 25px rgba(0,0,0,.25);backdrop-filter:blur(10px);
-    transform:translateY(20px) scale(.97);opacity:0;transition:all .8s cubic-bezier(.2,.9,.2,1)}
-  .card.show{opacity:1;transform:translateY(0) scale(1)}
-  h2{margin:0 0 8px 0;font-size:1.1rem}
-  .meta{font-size:.95rem;line-height:1.6}
-  .progress{height:10px;border-radius:999px;background:rgba(255,255,255,.2);overflow:hidden;margin-top:10px}
-  .fill{height:100%;border-radius:999px;background:linear-gradient(90deg,#22c55e,#3b82f6,#8b5cf6);
-    background-size:200% 100%;animation:move 3s linear infinite;transition:width .8s ease}
+  /* ===== 基础全局 ===== */
+  html,body{
+    height:100%;margin:0;font-family:"Inter","Segoe UI",system-ui,sans-serif;
+    background:linear-gradient(135deg,#6366f1 0%,#06b6d4 50%,#8b5cf6 100%);
+    background-size:300% 300%;
+    animation:bgMove 16s ease infinite;
+    color:#fff;overflow-x:hidden;transition:background 1s ease;
+  }
+  @keyframes bgMove{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+
+  /* ===== 顶部栏 ===== */
+  .topbar{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:16px 24px;margin:20px auto;max-width:960px;
+    background:rgba(255,255,255,.15);
+    backdrop-filter:blur(12px) saturate(180%);
+    border:1px solid rgba(255,255,255,.25);
+    border-radius:20px;
+    box-shadow:0 8px 30px rgba(0,0,0,.25);
+    transition:all .4s ease;
+  }
+  .topbar strong{font-size:1.15rem;letter-spacing:.5px;}
+  .btn{
+    background:rgba(255,255,255,.15);
+    border:none;border-radius:999px;padding:8px 16px;
+    color:#fff;font-weight:600;font-size:.9rem;
+    cursor:pointer;margin-left:8px;
+    box-shadow:inset 0 0 0 rgba(255,255,255,.4);
+    transition:all .25s ease;
+  }
+  .btn:hover{
+    background:rgba(255,255,255,.25);
+    box-shadow:0 0 10px rgba(255,255,255,.3);
+    transform:translateY(-1px);
+  }
+
+  /* ===== 主体卡片布局 ===== */
+  main{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+    gap:24px;padding:20px;max-width:960px;margin:0 auto;
+  }
+
+  .card{
+    padding:20px;border-radius:22px;
+    background:rgba(255,255,255,.12);
+    border:1px solid rgba(255,255,255,.25);
+    box-shadow:0 10px 30px rgba(0,0,0,.25);
+    backdrop-filter:blur(12px);
+    transform:translateY(20px) scale(.97);
+    opacity:0;
+    transition:all .8s cubic-bezier(.2,.9,.2,1);
+  }
+  .card.show{opacity:1;transform:translateY(0) scale(1);}
+  h2{margin:0 0 8px 0;font-size:1.15rem;font-weight:600;}
+  .meta{font-size:.95rem;line-height:1.7;opacity:.9;}
+  .progress{
+    height:10px;border-radius:999px;
+    background:rgba(255,255,255,.15);
+    overflow:hidden;margin-top:12px;
+    position:relative;
+  }
+  .fill{
+    height:100%;border-radius:999px;
+    background:linear-gradient(90deg,#22c55e,#3b82f6,#8b5cf6);
+    background-size:200% 100%;
+    animation:move 3s linear infinite;
+    transition:width .8s ease;
+  }
   @keyframes move{0%{background-position:0%}100%{background-position:-200%}}
-  footer{text-align:center;opacity:.85;margin:20px auto;font-size:.85rem}
-  /* loader */
-  #loader{position:fixed;inset:0;background:#0b1120;display:flex;align-items:center;justify-content:center;
-    color:#fff;font-weight:600;letter-spacing:.5px;font-size:1rem;z-index:99;animation:fadeOut .7s ease 1.2s forwards}
+  .usage-text{
+    font-size:.85rem;margin-top:8px;opacity:.85;
+  }
+
+  /* ===== 页脚 ===== */
+  footer{
+    text-align:center;opacity:.85;margin:24px auto 20px;font-size:.85rem;
+  }
+  footer a{color:#fff;text-decoration:underline;font-weight:500;}
+
+  /* ===== 加载动画 ===== */
+  #loader{
+    position:fixed;inset:0;
+    background:#0b1120;
+    display:flex;align-items:center;justify-content:center;
+    flex-direction:column;
+    color:#fff;font-weight:600;letter-spacing:.5px;font-size:1rem;
+    z-index:99;animation:fadeOut .8s ease 1.5s forwards;
+  }
   @keyframes fadeOut{to{opacity:0;visibility:hidden}}
-  .dots{display:flex;gap:8px;margin-left:8px}
-  .dot{width:10px;height:10px;border-radius:50%;background:#fff;opacity:.3;animation:blink .9s infinite alternate}
-  .dot:nth-child(2){animation-delay:.2s}.dot:nth-child(3){animation-delay:.4s}
-  @keyframes blink{from{opacity:.3;transform:scale(.9)}to{opacity:1;transform:scale(1.2)}}
-  /* skeleton */
-  .skeleton{height:140px;border-radius:18px;background:linear-gradient(100deg,rgba(255,255,255,.12) 40%,rgba(255,255,255,.18) 50%,rgba(255,255,255,.12) 60%);
-    background-size:200% 100%;animation:skeletonMove 1.5s infinite linear}
+  .dots{display:flex;gap:8px;margin-top:12px;}
+  .dot{
+    width:10px;height:10px;border-radius:50%;background:#fff;
+    opacity:.3;animation:blink .9s infinite alternate;
+  }
+  .dot:nth-child(2){animation-delay:.2s}
+  .dot:nth-child(3){animation-delay:.4s}
+  @keyframes blink{from{opacity:.3;transform:scale(.9)}to{opacity:1;transform:scale(1.3)}}
+
+  /* ===== 骨架加载 ===== */
+  .skeleton{
+    height:150px;border-radius:22px;
+    background:linear-gradient(100deg,rgba(255,255,255,.12) 40%,rgba(255,255,255,.18) 50%,rgba(255,255,255,.12) 60%);
+    background-size:200% 100%;
+    animation:skeletonMove 1.5s infinite linear;
+  }
   @keyframes skeletonMove{100%{background-position:-200% 0}}
-  /* 暗色模式 */
-  body.dark{background:#0b1120;color:#f1f5f9;}
-  body.dark .topbar{background:rgba(255,255,255,.08)}
-  body.dark .card{background:rgba(255,255,255,.06);box-shadow:0 8px 18px rgba(255,255,255,.08)}
+
+  /* ===== 暗色模式 ===== */
+  body.dark{
+    background:#0b1120;color:#e2e8f0;
+  }
+  body.dark .topbar{
+    background:rgba(255,255,255,.06);
+    border:1px solid rgba(255,255,255,.1);
+  }
+  body.dark .card{
+    background:rgba(255,255,255,.05);
+    border:1px solid rgba(255,255,255,.12);
+    box-shadow:0 10px 30px rgba(255,255,255,.05);
+  }
   body.dark .btn{background:rgba(255,255,255,.1)}
+  body.dark footer a{color:#93c5fd;}
 </style>
 </head>
 <body>
-  <div id="loader">加载中<div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div>
+  <div id="loader">
+    加载中
+    <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+  </div>
 
   <div class="topbar">
     <strong>☁️ Cloudflare Usage</strong>
@@ -320,28 +407,29 @@ function dashboardHTML(data) {
   </div>
 
   <main id="grid">
-    <!-- skeleton placeholders -->
     ${[...Array(Math.max(3, accounts.length || 3))].map(()=>`<div class="skeleton"></div>`).join("")}
   </main>
 
-  <footer>©2025 <a href="https://github.com/arlettebrook" target="_blank" style="color:#fff;text-decoration:underline">Arlettebrook</a></footer>
+  <footer>©2025 <a href="https://github.com/arlettebrook" target="_blank">Arlettebrook</a></footer>
 
   <script>
     const loader=document.getElementById('loader');
     const grid=document.getElementById('grid');
     const themeBtn=document.getElementById('theme');
     const refresh=document.getElementById('refresh');
-    // 主题记忆加载
     let dark=localStorage.getItem('theme')==='dark';
     if(dark) document.body.classList.add('dark');
 
-    // 数据渲染
+    // 格式化与转义
+    const formatNumber=n=>n?.toLocaleString?.()||n;
+    const escapeHtml=s=>String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+
+    // 渲染
     window.addEventListener('load',()=>{
       loader.style.pointerEvents='none';
-      // 延时替换骨架为真实内容
       setTimeout(()=>{
         grid.innerHTML=\`${accounts.map(a=>{
-          const u=(a.total/(a.total+a.free_quota_remaining||1)*100).toFixed(1);
+          const used=((a.total/(a.total+a.free_quota_remaining||1))*100).toFixed(1);
           return `<div class="card">
             <h2>${escapeHtml(a.account_name)}</h2>
             <div class="meta">
@@ -350,18 +438,15 @@ function dashboardHTML(data) {
               📦 总计：<b>${formatNumber(a.total)}</b><br>
               🎁 剩余额度：<b>${formatNumber(a.free_quota_remaining)}</b>
             </div>
-            <div class="progress"><div class="fill" style="width:${u}%"></div></div>
-            <div style="font-size:.85rem;margin-top:6px;opacity:.9">${u}% 已使用</div>
-          </div>`;}).join("")}\`;
-        // 显示动画
-        document.querySelectorAll('.card').forEach((c,i)=>setTimeout(()=>c.classList.add('show'),80*i));
-      },200);
+            <div class="progress"><div class="fill" style="width:${used}%"></div></div>
+            <div class="usage-text">${used}% 已使用</div>
+          </div>`;
+        }).join("")}\`;
+        document.querySelectorAll('.card').forEach((c,i)=>setTimeout(()=>c.classList.add('show'),100*i));
+      },250);
     });
 
-    // 刷新按钮
     refresh.onclick=()=>{document.body.style.opacity=.6;setTimeout(()=>location.reload(),200)};
-
-    // 主题切换 + 记忆
     themeBtn.onclick=()=>{
       dark=!dark;
       document.body.classList.toggle('dark',dark);
