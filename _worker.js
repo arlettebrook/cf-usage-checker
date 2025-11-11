@@ -265,221 +265,246 @@ function dashboardHTML(data) {
 <title>Cloudflare Usage Dashboard</title>
 <style>
   :root {
-    --bg-dark: #1b1e24;
-    --bg-light: #e9eef5;
-    --text-dark: #1f2937;
-    --text-light: #e5e7eb;
-    --accent: #3b82f6;
-    --radius: 22px;
-    --transition: all 0.3s ease;
+    --radius: 26px;
+    --transition: all .35s cubic-bezier(.4,0,.2,1);
+    --gradient-dark: linear-gradient(135deg,#3b82f6,#06b6d4,#8b5cf6);
+    --gradient-light: linear-gradient(135deg,#60a5fa,#a78bfa,#34d399);
+    --text-glow: 0 0 10px rgba(96,165,250,0.6);
   }
 
   body {
     margin:0;
-    font-family: "Inter", "Segoe UI", system-ui, sans-serif;
-    background: var(--bg-dark);
-    color: var(--text-light);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    min-height: 100vh;
-    transition: var(--transition);
+    font-family:"Inter","Segoe UI",system-ui,sans-serif;
+    background:radial-gradient(circle at 25% 20%,#0f172a 0%,#0b1120 70%);
+    color:#e2e8f0;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    transition:var(--transition);
+    background-attachment: fixed;
   }
 
   body.light {
-    background: var(--bg-light);
-    color: var(--text-dark);
-  }
-
-  /* 拟物容器基础样式 */
-  .soft {
-    border-radius: var(--radius);
-    background: var(--bg-dark);
-    box-shadow: 8px 8px 18px rgba(0,0,0,0.45),
-                -6px -6px 18px rgba(255,255,255,0.05);
-    transition: var(--transition);
-  }
-
-  body.light .soft {
-    background: var(--bg-light);
-    box-shadow: 8px 8px 18px rgba(0,0,0,0.12),
-                -6px -6px 18px rgba(255,255,255,0.8);
+    background:linear-gradient(180deg,#f9fafb,#edf2f7);
+    color:#1e293b;
   }
 
   /* 顶部栏 */
   .topbar {
-    margin: 50px 20px 30px;
-    padding: 28px 26px;
-    max-width: 480px;
-    width: calc(100% - 40px);
-    text-align: center;
+    background:var(--gradient-dark);
+    padding:40px 28px;
+    border-radius:calc(var(--radius) + 8px);
+    box-shadow:0 15px 45px rgba(0,0,0,0.4);
+    color:#fff;
+    margin:48px 20px 36px;
+    text-align:center;
+    max-width:520px;
+    width:calc(100% - 40px);
+    transition:var(--transition);
+    position:relative;
+    overflow:hidden;
+  }
+
+  body.light .topbar {
+    background:var(--gradient-light);
+    box-shadow:0 8px 30px rgba(0,0,0,0.15);
+  }
+
+  .topbar::before {
+    content:"";
+    position:absolute;
+    inset:-100%;
+    background:linear-gradient(120deg,rgba(255,255,255,.3),transparent,rgba(255,255,255,.3));
+    animation:shine 5s linear infinite;
+  }
+  @keyframes shine {
+    100% {transform:translateX(100%);}
   }
 
   .topbar h1 {
-    margin: 0 0 20px;
-    font-size: 1.25rem;
-    font-weight: 700;
-    color: var(--accent);
-    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    margin:0 0 24px;
+    font-size:1.5rem;
+    font-weight:800;
+    letter-spacing:.04em;
+    text-shadow:var(--text-glow);
+    line-height:1.4;
   }
 
   /* 按钮 */
   .btns {
-    display: flex;
-    justify-content: center;
-    gap: 14px;
+    display:flex;
+    justify-content:center;
+    gap:14px;
   }
 
   .btn {
-    flex: 1;
-    border: none;
-    border-radius: var(--radius);
-    padding: 10px 0;
-    font-weight: 600;
-    cursor: pointer;
-    background: var(--bg-dark);
-    color: var(--text-light);
-    box-shadow: inset 2px 2px 6px rgba(0,0,0,0.5),
-                inset -2px -2px 6px rgba(255,255,255,0.1);
-    transition: var(--transition);
+    flex:1;
+    border:none;
+    border-radius:18px;
+    padding:12px 0;
+    font-weight:600;
+    background:rgba(255,255,255,0.15);
+    color:#fff;
+    backdrop-filter:blur(8px);
+    cursor:pointer;
+    transition:var(--transition);
+    box-shadow:0 4px 10px rgba(0,0,0,0.3);
+    position:relative;
+    overflow:hidden;
   }
+
+  .btn::after {
+    content:"";
+    position:absolute;
+    inset:0;
+    background:linear-gradient(120deg,rgba(255,255,255,.25),transparent,rgba(255,255,255,.25));
+    opacity:0;
+    transition:opacity .4s;
+  }
+
+  .btn:hover::after {opacity:0.7;}
+  .btn:hover {transform:translateY(-2px) scale(1.02);}
+  .btn:active {transform:scale(0.96);}
 
   body.light .btn {
-    background: var(--bg-light);
-    color: var(--text-dark);
-    box-shadow: inset 2px 2px 5px rgba(0,0,0,0.15),
-                inset -2px -2px 5px rgba(255,255,255,0.7);
+    background:rgba(255,255,255,0.7);
+    color:#1e293b;
+    box-shadow:0 2px 8px rgba(0,0,0,0.1);
   }
 
-  .btn:hover {
-    box-shadow: 6px 6px 12px rgba(0,0,0,0.5),
-                -4px -4px 12px rgba(255,255,255,0.08);
-    transform: translateY(-1px);
-  }
-
-  body.light .btn:hover {
-    box-shadow: 6px 6px 12px rgba(0,0,0,0.15),
-                -4px -4px 12px rgba(255,255,255,0.9);
-  }
-
-  /* 主体卡片 */
+  /* 卡片布局 */
   main {
-    width: calc(100% - 40px);
-    max-width: 480px;
-    display: flex;
-    flex-direction: column;
-    gap: 22px;
-    margin-bottom: 50px;
+    width:calc(100% - 40px);
+    max-width:520px;
+    display:flex;
+    flex-direction:column;
+    gap:28px;
+    margin-bottom:60px;
   }
 
   .card {
-    padding: 26px;
-    opacity: 0;
-    transform: translateY(20px);
-    transition: var(--transition);
+    background:rgba(24,32,51,0.78);
+    border:1px solid rgba(255,255,255,0.06);
+    border-radius:var(--radius);
+    padding:28px;
+    box-shadow:0 10px 35px rgba(0,0,0,0.35);
+    backdrop-filter:blur(16px);
+    transform:translateY(24px);
+    opacity:0;
+    transition:var(--transition);
+    position:relative;
+    overflow:hidden;
   }
 
   .card.show {
-    opacity: 1;
-    transform: translateY(0);
+    opacity:1;
+    transform:translateY(0);
+  }
+
+  .card:hover {
+    transform:translateY(-6px) scale(1.015);
+    box-shadow:0 12px 40px rgba(59,130,246,0.35);
+  }
+
+  body.light .card {
+    background:rgba(255,255,255,0.95);
+    border:1px solid rgba(0,0,0,0.05);
+    box-shadow:0 8px 25px rgba(0,0,0,0.08);
   }
 
   .card h2 {
-    margin: 0 0 14px;
-    font-size: 1.05rem;
-    font-weight: 600;
-    color: var(--accent);
+    margin:0 0 14px;
+    font-size:1.15rem;
+    font-weight:700;
+    background:linear-gradient(90deg,#60a5fa,#a78bfa,#34d399);
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
   }
 
   .meta {
-    line-height: 1.8;
-    font-size: .95rem;
-    opacity: .85;
+    line-height:1.8;
+    font-size:.94rem;
+    color:#a1aecb;
   }
 
-  /* 拟物进度条 */
   .progress {
-    margin-top: 14px;
-    height: 12px;
-    border-radius: 999px;
-    background: var(--bg-dark);
-    box-shadow: inset 2px 2px 5px rgba(0,0,0,0.5),
-                inset -2px -2px 5px rgba(255,255,255,0.1);
-    overflow: hidden;
-  }
-
-  body.light .progress {
-    background: var(--bg-light);
-    box-shadow: inset 2px 2px 5px rgba(0,0,0,0.1),
-                inset -2px -2px 5px rgba(255,255,255,0.8);
+    margin-top:16px;
+    height:12px;
+    border-radius:999px;
+    background:rgba(255,255,255,0.12);
+    overflow:hidden;
+    position:relative;
   }
 
   .fill {
-    height: 100%;
-    width: 0%;
-    background: var(--accent);
-    border-radius: 999px;
-    transition: width 1s ease-out;
+    height:100%;
+    border-radius:999px;
+    background:linear-gradient(90deg,#22c55e,#3b82f6,#8b5cf6,#3b82f6,#22c55e);
+    background-size:300% 100%;
+    animation:move 4s linear infinite;
+    box-shadow:0 0 14px rgba(59,130,246,0.35);
+    width:0%;
+  }
+
+  @keyframes move {
+    0% {background-position:0%}
+    100% {background-position:-300%}
   }
 
   .usage-text {
-    font-size: .85rem;
-    margin-top: 8px;
-    opacity: .75;
+    font-size:.85rem;
+    margin-top:10px;
+    color:#94a3b8;
+    opacity:.85;
+    text-align:right;
   }
 
   /* 骨架 */
   .skeleton {
-    height: 140px;
-    border-radius: var(--radius);
-    background: linear-gradient(120deg, rgba(255,255,255,.08) 40%, rgba(255,255,255,.12) 50%, rgba(255,255,255,.08) 60%);
-    background-size: 200% 100%;
-    animation: skeletonMove 1.4s infinite linear;
+    height:150px;
+    border-radius:var(--radius);
+    background:linear-gradient(100deg,rgba(255,255,255,.06) 40%,rgba(255,255,255,.1) 50%,rgba(255,255,255,.06) 60%);
+    background-size:200% 100%;
+    animation:skeletonMove 1.4s infinite linear;
   }
 
   @keyframes skeletonMove {
-    100% { background-position: -200% 0; }
+    100%{background-position:-200% 0}
   }
 
-  /* 加载遮罩 */
   #loader {
-    position: fixed;
-    inset: 0;
-    background: var(--bg-dark);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--text-light);
-    z-index: 99;
-    font-weight: 600;
-    animation: fadeOut .8s ease 1.2s forwards;
+    position:fixed;
+    inset:0;
+    background:#0b1120;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    color:#fff;
+    z-index:99;
+    font-weight:600;
+    animation:fadeOut .8s ease 1.2s forwards;
   }
 
-  @keyframes fadeOut {
-    to { opacity: 0; visibility: hidden; }
-  }
-
-  footer {
-    text-align: center;
-    font-size: .8rem;
-    opacity: .6;
-    margin-bottom: 20px;
-  }
-
-  footer a {
-    color: var(--accent);
-    text-decoration: none;
-  }
+  @keyframes fadeOut {to {opacity:0;visibility:hidden;}}
+  @keyframes blink {to{opacity:.9;transform:scale(1.2);}}
 </style>
 </head>
 <body>
-  <div id="loader">加载中...</div>
+  <div id="loader">加载中
+    <div style="display:flex;gap:8px;margin-top:12px;">
+      <div style="width:10px;height:10px;border-radius:50%;background:#fff;opacity:.3;animation:blink .9s infinite alternate;"></div>
+      <div style="width:10px;height:10px;border-radius:50%;background:#fff;opacity:.3;animation:blink .9s .2s infinite alternate;"></div>
+      <div style="width:10px;height:10px;border-radius:50%;background:#fff;opacity:.3;animation:blink .9s .4s infinite alternate;"></div>
+    </div>
+  </div>
 
-  <div class="topbar soft">
-    <h1>☁️ Cloudflare Usage Dashboard</h1>
+  <div class="topbar">
+    <h1>🌤️ Cloudflare Workers & Pages Usage 仪表盘</h1>
     <div class="btns">
       <button id="refresh" class="btn">🔄 刷新数据</button>
-      <button id="theme" class="btn">🌗 主题切换</button>
+      <button id="theme" class="btn">🌗 切换主题</button>
       <form id="logoutForm" method="POST" action="/logout" style="margin:0;">
         <button type="submit" class="btn">⎋ 登出</button>
       </form>
@@ -487,12 +512,13 @@ function dashboardHTML(data) {
   </div>
 
   <main id="grid">
-    ${[...Array(Math.max(3, accounts.length || 3))].map(()=>`<div class="skeleton soft"></div>`).join("")}
+    ${[...Array(Math.max(3, accounts.length || 3))].map(()=>`<div class="skeleton"></div>`).join("")}
   </main>
 
-  <footer>©2025 <a href="https://github.com/arlettebrook" target="_blank">Arlettebrook</a></footer>
+  <footer style="text-align:center;font-size:.8rem;opacity:.65;margin-bottom:24px;">©2025 <a href="https://github.com/arlettebrook" target="_blank" style="color:#60a5fa;text-decoration:none;">Arlettebrook</a></footer>
 
   <script>
+    const loader=document.getElementById('loader');
     const grid=document.getElementById('grid');
     const themeBtn=document.getElementById('theme');
     const refresh=document.getElementById('refresh');
@@ -507,7 +533,7 @@ function dashboardHTML(data) {
       setTimeout(()=>{
         grid.innerHTML=\`${accounts.map(a=>{
           const used=((a.total/(a.total+a.free_quota_remaining||1))*100).toFixed(1);
-          return `<div class="card soft">
+          return `<div class="card">
             <h2>${escapeHtml(a.account_name)}</h2>
             <div class="meta">
               📄 Pages：<b>${formatNumber(a.pages)}</b><br>
@@ -515,12 +541,29 @@ function dashboardHTML(data) {
               📦 总计：<b>${formatNumber(a.total)}</b><br>
               🎁 免费额度剩余：<b>${formatNumber(a.free_quota_remaining)}</b>
             </div>
-            <div class="progress"><div class="fill" style="width:${used}%"></div></div>
-            <div class="usage-text">${used}% 已使用</div>
+            <div class="progress"><div class="fill" data-target="${used}"></div></div>
+            <div class="usage-text"><span class="percent">0</span>% 已使用</div>
           </div>`;
         }).join("")}\`;
-        document.querySelectorAll('.card').forEach((c,i)=>setTimeout(()=>c.classList.add('show'),120*i));
-      },300);
+
+        document.querySelectorAll('.card').forEach((c,i)=>{
+          setTimeout(()=>{
+            c.classList.add('show');
+            const fill=c.querySelector('.fill');
+            const percentEl=c.querySelector('.percent');
+            const target=parseFloat(fill.dataset.target);
+            let progress=0;
+            const step=()=>{
+              progress+=target/40;
+              if(progress>=target) progress=target;
+              fill.style.width=progress+'%';
+              percentEl.textContent=progress.toFixed(1);
+              if(progress<target) requestAnimationFrame(step);
+            };
+            requestAnimationFrame(step);
+          },180*i);
+        });
+      },350);
     });
 
     refresh.onclick=()=>{document.body.style.opacity=.6;setTimeout(()=>location.reload(),200)};
