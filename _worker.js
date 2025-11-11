@@ -266,12 +266,13 @@ function dashboardHTML(data) {
 <style>
   html,body{height:100%;margin:0;font-family:Inter,"Segoe UI",system-ui,sans-serif;
     background:linear-gradient(120deg,#6366f1,#06b6d4,#8b5cf6);
-    background-size:300% 300%;animation:bg 14s ease infinite;color:#fff;overflow-x:hidden}
+    background-size:300% 300%;animation:bg 14s ease infinite;color:#fff;overflow-x:hidden;transition:background 1s ease}
   @keyframes bg{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
   .topbar{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;
-    background:rgba(255,255,255,.1);backdrop-filter:blur(8px);border-radius:16px;margin:20px;box-shadow:0 6px 20px rgba(0,0,0,.25)}
-  .btn{background:rgba(255,255,255,.15);border:none;border-radius:999px;padding:8px 14px;color:#fff;
-    font-weight:600;cursor:pointer;transition:all .25s}
+    background:rgba(255,255,255,.1);backdrop-filter:blur(8px);border-radius:16px;margin:20px;
+    box-shadow:0 6px 20px rgba(0,0,0,.25);transition:background .5s ease}
+  .btn{background:rgba(255,255,255,.15);border:none;border-radius:999px;padding:8px 14px;
+    color:#fff;font-weight:600;cursor:pointer;transition:all .25s}
   .btn:hover{background:rgba(255,255,255,.25);transform:translateY(-2px)}
   main{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px;padding:20px}
   .card{padding:18px;border-radius:18px;background:rgba(255,255,255,.12);
@@ -287,12 +288,21 @@ function dashboardHTML(data) {
   footer{text-align:center;opacity:.85;margin:20px auto;font-size:.85rem}
   /* loader */
   #loader{position:fixed;inset:0;background:#0b1120;display:flex;align-items:center;justify-content:center;
-    color:#fff;font-weight:600;letter-spacing:.5px;font-size:1rem;z-index:99;animation:fadeOut .7s ease 1s forwards}
+    color:#fff;font-weight:600;letter-spacing:.5px;font-size:1rem;z-index:99;animation:fadeOut .7s ease 1.2s forwards}
   @keyframes fadeOut{to{opacity:0;visibility:hidden}}
   .dots{display:flex;gap:8px;margin-left:8px}
   .dot{width:10px;height:10px;border-radius:50%;background:#fff;opacity:.3;animation:blink .9s infinite alternate}
   .dot:nth-child(2){animation-delay:.2s}.dot:nth-child(3){animation-delay:.4s}
   @keyframes blink{from{opacity:.3;transform:scale(.9)}to{opacity:1;transform:scale(1.2)}}
+  /* skeleton */
+  .skeleton{height:140px;border-radius:18px;background:linear-gradient(100deg,rgba(255,255,255,.12) 40%,rgba(255,255,255,.18) 50%,rgba(255,255,255,.12) 60%);
+    background-size:200% 100%;animation:skeletonMove 1.5s infinite linear}
+  @keyframes skeletonMove{100%{background-position:-200% 0}}
+  /* 暗色模式 */
+  body.dark{background:#0b1120;color:#f1f5f9;}
+  body.dark .topbar{background:rgba(255,255,255,.08)}
+  body.dark .card{background:rgba(255,255,255,.06);box-shadow:0 8px 18px rgba(255,255,255,.08)}
+  body.dark .btn{background:rgba(255,255,255,.1)}
 </style>
 </head>
 <body>
@@ -310,38 +320,52 @@ function dashboardHTML(data) {
   </div>
 
   <main id="grid">
-    ${accounts.map(a=>{
-      const u=(a.total/(a.total+a.free_quota_remaining||1)*100).toFixed(1);
-      return `
-      <div class="card">
-        <h2>${escapeHtml(a.account_name)}</h2>
-        <div class="meta">
-          📄 Pages：<b>${formatNumber(a.pages)}</b><br>
-          ⚙️ Workers：<b>${formatNumber(a.workers)}</b><br>
-          📦 总计：<b>${formatNumber(a.total)}</b><br>
-          🎁 剩余额度：<b>${formatNumber(a.free_quota_remaining)}</b>
-        </div>
-        <div class="progress"><div class="fill" style="width:${u}%"></div></div>
-        <div style="font-size:.85rem;margin-top:6px;opacity:.9">${u}% 已使用</div>
-      </div>`;
-    }).join("")}
+    <!-- skeleton placeholders -->
+    ${[...Array(Math.max(3, accounts.length || 3))].map(()=>`<div class="skeleton"></div>`).join("")}
   </main>
 
   <footer>©2025 <a href="https://github.com/arlettebrook" target="_blank" style="color:#fff;text-decoration:underline">Arlettebrook</a></footer>
 
   <script>
     const loader=document.getElementById('loader');
-    const cards=[...document.querySelectorAll('.card')];
+    const grid=document.getElementById('grid');
+    const themeBtn=document.getElementById('theme');
+    const refresh=document.getElementById('refresh');
+    // 主题记忆加载
+    let dark=localStorage.getItem('theme')==='dark';
+    if(dark) document.body.classList.add('dark');
+
+    // 数据渲染
     window.addEventListener('load',()=>{
       loader.style.pointerEvents='none';
-      cards.forEach((c,i)=>setTimeout(()=>c.classList.add('show'),100+i*60));
+      // 延时替换骨架为真实内容
+      setTimeout(()=>{
+        grid.innerHTML=\`${accounts.map(a=>{
+          const u=(a.total/(a.total+a.free_quota_remaining||1)*100).toFixed(1);
+          return `<div class="card">
+            <h2>${escapeHtml(a.account_name)}</h2>
+            <div class="meta">
+              📄 Pages：<b>${formatNumber(a.pages)}</b><br>
+              ⚙️ Workers：<b>${formatNumber(a.workers)}</b><br>
+              📦 总计：<b>${formatNumber(a.total)}</b><br>
+              🎁 剩余额度：<b>${formatNumber(a.free_quota_remaining)}</b>
+            </div>
+            <div class="progress"><div class="fill" style="width:${u}%"></div></div>
+            <div style="font-size:.85rem;margin-top:6px;opacity:.9">${u}% 已使用</div>
+          </div>`;}).join("")}\`;
+        // 显示动画
+        document.querySelectorAll('.card').forEach((c,i)=>setTimeout(()=>c.classList.add('show'),80*i));
+      },200);
     });
-    document.getElementById('refresh').onclick=()=>{document.body.style.opacity=.6;setTimeout(()=>location.reload(),200)};
-    let dark=false;
-    document.getElementById('theme').onclick=()=>{
+
+    // 刷新按钮
+    refresh.onclick=()=>{document.body.style.opacity=.6;setTimeout(()=>location.reload(),200)};
+
+    // 主题切换 + 记忆
+    themeBtn.onclick=()=>{
       dark=!dark;
-      document.body.style.background=dark?"#0b1120":"linear-gradient(120deg,#6366f1,#06b6d4,#8b5cf6)";
-      document.body.style.transition="background 1s ease";
+      document.body.classList.toggle('dark',dark);
+      localStorage.setItem('theme',dark?'dark':'light');
     };
   </script>
 </body>
