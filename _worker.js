@@ -265,55 +265,38 @@ function dashboardHTML(data) {
 <title>Cloudflare Usage Dashboard</title>
 <style>
   :root {
-    /* 暗色主题变量 */
-    --bg-dark: #050b16;
-    --card-dark: rgba(17,25,40,0.8);
-    --border-dark: rgba(255,255,255,0.05);
-    --text-light: #e2e8f0;
-    --accent-dark: #60a5fa;
+    --radius: 24px;
+    --transition: all .35s cubic-bezier(.4,0,.2,1);
     --gradient-dark: linear-gradient(145deg,#3b82f6,#06b6d4,#8b5cf6);
-
-    /* 亮色主题变量 */
-    --bg-light: #f5f7fb;
-    --card-light: rgba(255,255,255,0.9);
-    --border-light: rgba(0,0,0,0.08);
-    --text-dark: #1e293b;
-    --accent-light: #2563eb;
     --gradient-light: linear-gradient(145deg,#60a5fa,#a78bfa,#34d399);
-
-    --transition: all .35s ease;
   }
 
   body {
     margin:0;
     font-family:"Inter","Segoe UI",system-ui,sans-serif;
-    background:var(--bg-dark);
-    color:var(--text-light);
+    background:radial-gradient(circle at 20% 20%,#0f172a 0%,#0b1120 60%);
+    color:#e2e8f0;
     min-height:100vh;
     display:flex;
     flex-direction:column;
     align-items:center;
     transition:var(--transition);
     background-attachment: fixed;
-    background-image: radial-gradient(circle at 20% 20%, rgba(59,130,246,0.1), transparent 60%), 
-                      radial-gradient(circle at 80% 80%, rgba(139,92,246,0.1), transparent 60%);
   }
 
   body.light {
-    background:var(--bg-light);
-    color:var(--text-dark);
-    background-image: radial-gradient(circle at 20% 20%, rgba(59,130,246,0.05), transparent 60%), 
-                      radial-gradient(circle at 80% 80%, rgba(139,92,246,0.05), transparent 60%);
+    background:linear-gradient(180deg,#f9fafb,#edf2f7);
+    color:#1e293b;
   }
 
   /* 顶部栏 */
   .topbar {
     background:var(--gradient-dark);
-    padding:32px 26px;
-    border-radius:28px;
-    box-shadow:0 12px 40px rgba(0,0,0,0.4);
+    padding:36px 26px;
+    border-radius:calc(var(--radius) + 4px);
+    box-shadow:0 12px 40px rgba(0,0,0,0.35);
     color:#fff;
-    margin:40px 20px 24px;
+    margin:48px 20px 30px;
     text-align:center;
     max-width:460px;
     width:calc(100% - 40px);
@@ -322,20 +305,22 @@ function dashboardHTML(data) {
 
   body.light .topbar {
     background:var(--gradient-light);
-    box-shadow:0 8px 25px rgba(0,0,0,0.15);
+    box-shadow:0 8px 25px rgba(0,0,0,0.12);
   }
 
   .topbar h1 {
-    margin:0 0 22px;
-    font-size:1.25rem;
+    margin:0 0 20px;
+    font-size:1.3rem;
     font-weight:700;
-    letter-spacing:0.02em;
+    letter-spacing:.03em;
+    text-shadow:0 2px 4px rgba(0,0,0,0.25);
   }
 
+  /* 按钮 */
   .btns {
     display:flex;
     justify-content:center;
-    gap:16px;
+    gap:14px;
   }
 
   .btn {
@@ -343,56 +328,56 @@ function dashboardHTML(data) {
     border:none;
     border-radius:18px;
     padding:11px 0;
-    color:#fff;
     font-weight:600;
-    background:rgba(255,255,255,0.15);
-    box-shadow:0 4px 12px rgba(0,0,0,0.4);
+    background:rgba(255,255,255,0.18);
+    color:#fff;
     backdrop-filter:blur(8px);
     cursor:pointer;
-    transition:all .25s ease;
+    transition:var(--transition);
+    box-shadow:0 3px 8px rgba(0,0,0,0.3);
+    position:relative;
+    overflow:hidden;
   }
 
-  .btn:hover {
-    background:rgba(255,255,255,0.25);
-    transform:translateY(-2px);
-    box-shadow:0 6px 14px rgba(0,0,0,0.45), 0 0 10px rgba(255,255,255,0.2);
+  .btn::after {
+    content:"";
+    position:absolute;
+    inset:0;
+    background:linear-gradient(120deg,rgba(255,255,255,.2),transparent,rgba(255,255,255,.2));
+    opacity:0;
+    transition:opacity .4s;
   }
 
-  .btn:active {
-    transform:scale(0.96);
-  }
+  .btn:hover::after {opacity:0.6;}
+  .btn:hover {transform:translateY(-2px);}
+  .btn:active {transform:scale(0.97);}
 
   body.light .btn {
     background:rgba(255,255,255,0.7);
-    color:var(--text-dark);
-    box-shadow:0 3px 8px rgba(0,0,0,0.1);
+    color:#1e293b;
+    box-shadow:0 2px 6px rgba(0,0,0,0.08);
   }
 
-  body.light .btn:hover {
-    background:rgba(255,255,255,0.9);
-    box-shadow:0 6px 12px rgba(0,0,0,0.15);
-  }
-
-  /* 卡片区 */
+  /* 卡片布局 */
   main {
     width:calc(100% - 40px);
     max-width:460px;
     display:flex;
     flex-direction:column;
-    gap:22px;
+    gap:24px;
     margin-bottom:50px;
   }
 
   .card {
-    background:var(--card-dark);
-    border:1px solid var(--border-dark);
-    border-radius:24px;
-    padding:24px 26px;
+    background:rgba(24,32,51,0.75);
+    border:1px solid rgba(255,255,255,0.06);
+    border-radius:var(--radius);
+    padding:26px;
     box-shadow:0 8px 28px rgba(0,0,0,0.35);
     backdrop-filter:blur(14px);
-    transform:translateY(20px);
+    transform:translateY(24px);
     opacity:0;
-    transition:all .8s cubic-bezier(.2,.9,.2,1);
+    transition:var(--transition);
   }
 
   .card.show {
@@ -401,43 +386,36 @@ function dashboardHTML(data) {
   }
 
   .card:hover {
-    transform:translateY(-4px);
-    box-shadow:0 12px 36px rgba(0,0,0,0.5), 0 0 18px rgba(59,130,246,0.25);
+    transform:translateY(-4px) scale(1.01);
+    box-shadow:0 12px 36px rgba(59,130,246,0.3);
   }
 
   body.light .card {
-    background:var(--card-light);
-    border:1px solid var(--border-light);
-    box-shadow:0 8px 25px rgba(0,0,0,0.08);
-  }
-
-  body.light .card:hover {
-    box-shadow:0 10px 28px rgba(0,0,0,0.12), 0 0 14px rgba(96,165,250,0.15);
+    background:rgba(255,255,255,0.9);
+    border:1px solid rgba(0,0,0,0.05);
+    box-shadow:0 8px 22px rgba(0,0,0,0.08);
   }
 
   .card h2 {
-    margin:0 0 12px;
-    font-size:1.1rem;
+    margin:0 0 14px;
+    font-size:1.05rem;
     font-weight:600;
-    color:var(--accent-dark);
-    transition:var(--transition);
-  }
-
-  body.light .card h2 {
-    color:var(--accent-light);
+    color:#60a5fa;
   }
 
   .meta {
     line-height:1.8;
-    font-size:.95rem;
+    font-size:.93rem;
+    color:#94a3b8;
   }
 
   .progress {
-    margin-top:12px;
+    margin-top:14px;
     height:10px;
     border-radius:999px;
-    background:rgba(255,255,255,0.1);
+    background:rgba(255,255,255,0.12);
     overflow:hidden;
+    position:relative;
   }
 
   .fill {
@@ -445,9 +423,9 @@ function dashboardHTML(data) {
     border-radius:999px;
     background:linear-gradient(90deg,#22c55e,#3b82f6,#8b5cf6);
     background-size:200% 100%;
-    box-shadow:0 0 10px rgba(59,130,246,0.4);
     animation:move 3s linear infinite;
-    transition:width .8s ease;
+    box-shadow:0 0 10px rgba(59,130,246,0.35);
+    width:0%;
   }
 
   @keyframes move {
@@ -456,15 +434,16 @@ function dashboardHTML(data) {
   }
 
   .usage-text {
-    font-size:.85rem;
+    font-size:.83rem;
     margin-top:8px;
-    opacity:.8;
+    color:#94a3b8;
+    opacity:.85;
   }
 
-  /* 加载骨架 */
+  /* 骨架 */
   .skeleton {
     height:140px;
-    border-radius:24px;
+    border-radius:var(--radius);
     background:linear-gradient(100deg,rgba(255,255,255,.06) 40%,rgba(255,255,255,.1) 50%,rgba(255,255,255,.06) 60%);
     background-size:200% 100%;
     animation:skeletonMove 1.4s infinite linear;
@@ -474,11 +453,10 @@ function dashboardHTML(data) {
     100%{background-position:-200% 0}
   }
 
-  /* 加载遮罩 */
   #loader {
     position:fixed;
     inset:0;
-    background:#050b16;
+    background:#0b1120;
     display:flex;
     flex-direction:column;
     align-items:center;
@@ -489,53 +467,16 @@ function dashboardHTML(data) {
     animation:fadeOut .8s ease 1.2s forwards;
   }
 
-  body.light #loader {
-    background:#f5f7fb;
-    color:#1e293b;
-  }
-
-  @keyframes fadeOut {
-    to {opacity:0;visibility:hidden;}
-  }
-
-  .dots {
-    display:flex;
-    gap:8px;
-    margin-top:12px;
-  }
-
-  .dot {
-    width:10px;
-    height:10px;
-    border-radius:50%;
-    background:#fff;
-    opacity:.3;
-    animation:blink .9s infinite alternate;
-  }
-
-  .dot:nth-child(2){animation-delay:.2s;}
-  .dot:nth-child(3){animation-delay:.4s;}
-
-  @keyframes blink {
-    from{opacity:.3;transform:scale(.9)}
-    to{opacity:1;transform:scale(1.3)}
-  }
-
-  footer {
-    text-align:center;
-    font-size:.8rem;
-    opacity:.6;
-    margin-bottom:20px;
-    transition:var(--transition);
-  }
-
-  footer a{color:#60a5fa;text-decoration:none;}
-  body.light footer a{color:#2563eb;}
+  @keyframes fadeOut {to {opacity:0;visibility:hidden;}}
 </style>
 </head>
 <body>
   <div id="loader">加载中
-    <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+    <div style="display:flex;gap:8px;margin-top:12px;">
+      <div style="width:10px;height:10px;border-radius:50%;background:#fff;opacity:.3;animation:blink .9s infinite alternate;"></div>
+      <div style="width:10px;height:10px;border-radius:50%;background:#fff;opacity:.3;animation:blink .9s .2s infinite alternate;"></div>
+      <div style="width:10px;height:10px;border-radius:50%;background:#fff;opacity:.3;animation:blink .9s .4s infinite alternate;"></div>
+    </div>
   </div>
 
   <div class="topbar">
@@ -553,7 +494,7 @@ function dashboardHTML(data) {
     ${[...Array(Math.max(3, accounts.length || 3))].map(()=>`<div class="skeleton"></div>`).join("")}
   </main>
 
-  <footer>©2025 <a href="https://github.com/arlettebrook" target="_blank">Arlettebrook</a></footer>
+  <footer style="text-align:center;font-size:.8rem;opacity:.65;margin-bottom:24px;">©2025 <a href="https://github.com/arlettebrook" target="_blank" style="color:#60a5fa;text-decoration:none;">Arlettebrook</a></footer>
 
   <script>
     const loader=document.getElementById('loader');
@@ -568,7 +509,6 @@ function dashboardHTML(data) {
     }
 
     window.addEventListener('load',()=>{
-      loader.style.pointerEvents='none';
       setTimeout(()=>{
         grid.innerHTML=\`${accounts.map(a=>{
           const used=((a.total/(a.total+a.free_quota_remaining||1))*100).toFixed(1);
@@ -580,12 +520,29 @@ function dashboardHTML(data) {
               📦 总计：<b>${formatNumber(a.total)}</b><br>
               🎁 免费额度剩余：<b>${formatNumber(a.free_quota_remaining)}</b>
             </div>
-            <div class="progress"><div class="fill" style="width:${used}%"></div></div>
-            <div class="usage-text">${used}% 已使用</div>
+            <div class="progress"><div class="fill" data-target="${used}"></div></div>
+            <div class="usage-text"><span class="percent">0</span>% 已使用</div>
           </div>`;
         }).join("")}\`;
-        document.querySelectorAll('.card').forEach((c,i)=>setTimeout(()=>c.classList.add('show'),100*i));
-      },250);
+
+        document.querySelectorAll('.card').forEach((c,i)=>{
+          setTimeout(()=>{
+            c.classList.add('show');
+            const fill=c.querySelector('.fill');
+            const percentEl=c.querySelector('.percent');
+            const target=parseFloat(fill.dataset.target);
+            let progress=0;
+            const step=()=>{
+              progress+=target/40;
+              if(progress>=target) progress=target;
+              fill.style.width=progress+'%';
+              percentEl.textContent=progress.toFixed(1);
+              if(progress<target) requestAnimationFrame(step);
+            };
+            requestAnimationFrame(step);
+          },150*i);
+        });
+      },350);
     });
 
     refresh.onclick=()=>{document.body.style.opacity=.6;setTimeout(()=>location.reload(),200)};
