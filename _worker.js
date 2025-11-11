@@ -269,7 +269,7 @@ function dashboardHTML(data) {
     --transition: all .35s cubic-bezier(.4,0,.2,1);
     --gradient-dark: linear-gradient(135deg,#3b82f6,#06b6d4,#8b5cf6);
     --gradient-light: linear-gradient(135deg,#60a5fa,#a78bfa,#34d399);
-    --text-glow: 0 0 10px rgba(96,165,250,0.6);
+    --text-glow: 0 0 14px rgba(96,165,250,0.6);
   }
 
   body {
@@ -293,7 +293,7 @@ function dashboardHTML(data) {
   /* 顶部栏 */
   .topbar {
     background:var(--gradient-dark);
-    padding:40px 28px;
+    padding:42px 28px;
     border-radius:calc(var(--radius) + 8px);
     box-shadow:0 15px 45px rgba(0,0,0,0.4);
     color:#fff;
@@ -301,7 +301,6 @@ function dashboardHTML(data) {
     text-align:center;
     max-width:520px;
     width:calc(100% - 40px);
-    transition:var(--transition);
     position:relative;
     overflow:hidden;
   }
@@ -311,31 +310,26 @@ function dashboardHTML(data) {
     box-shadow:0 8px 30px rgba(0,0,0,0.15);
   }
 
-  .topbar::before {
-    content:"";
-    position:absolute;
-    inset:-100%;
-    background:linear-gradient(120deg,rgba(255,255,255,.3),transparent,rgba(255,255,255,.3));
-    animation:shine 5s linear infinite;
-  }
-  @keyframes shine {
-    100% {transform:translateX(100%);}
-  }
-
   .topbar h1 {
     margin:0 0 24px;
-    font-size:1.5rem;
+    font-size:1.6rem;
     font-weight:800;
     letter-spacing:.04em;
     text-shadow:var(--text-glow);
-    line-height:1.4;
+    animation:breath 4s ease-in-out infinite;
   }
 
-  /* 按钮 */
+  @keyframes breath {
+    0%,100% { text-shadow:0 0 6px rgba(96,165,250,0.4); }
+    50% { text-shadow:0 0 18px rgba(96,165,250,0.8); }
+  }
+
+  /* 按钮组 */
   .btns {
     display:flex;
     justify-content:center;
-    gap:14px;
+    flex-wrap:wrap;
+    gap:12px;
   }
 
   .btn {
@@ -344,7 +338,7 @@ function dashboardHTML(data) {
     border-radius:18px;
     padding:12px 0;
     font-weight:600;
-    background:rgba(255,255,255,0.15);
+    background:rgba(255,255,255,0.18);
     color:#fff;
     backdrop-filter:blur(8px);
     cursor:pointer;
@@ -352,28 +346,24 @@ function dashboardHTML(data) {
     box-shadow:0 4px 10px rgba(0,0,0,0.3);
     position:relative;
     overflow:hidden;
+    min-width:120px;
   }
 
-  .btn::after {
+  .btn::before {
     content:"";
     position:absolute;
     inset:0;
-    background:linear-gradient(120deg,rgba(255,255,255,.25),transparent,rgba(255,255,255,.25));
+    background:radial-gradient(circle at center,rgba(255,255,255,0.4),transparent 70%);
     opacity:0;
-    transition:opacity .4s;
+    transform:scale(0);
+    transition:opacity .4s,transform .4s;
   }
 
-  .btn:hover::after {opacity:0.7;}
-  .btn:hover {transform:translateY(-2px) scale(1.02);}
-  .btn:active {transform:scale(0.96);}
+  .btn:hover::before { opacity:.3; transform:scale(3); }
+  .btn:hover { transform:translateY(-2px) scale(1.03); }
+  body.light .btn { background:rgba(255,255,255,0.7); color:#1e293b; }
 
-  body.light .btn {
-    background:rgba(255,255,255,0.7);
-    color:#1e293b;
-    box-shadow:0 2px 8px rgba(0,0,0,0.1);
-  }
-
-  /* 卡片布局 */
+  /* 主体布局 */
   main {
     width:calc(100% - 40px);
     max-width:520px;
@@ -383,6 +373,7 @@ function dashboardHTML(data) {
     margin-bottom:60px;
   }
 
+  /* 卡片模式 */
   .card {
     background:rgba(24,32,51,0.78);
     border:1px solid rgba(255,255,255,0.06);
@@ -390,20 +381,22 @@ function dashboardHTML(data) {
     padding:28px;
     box-shadow:0 10px 35px rgba(0,0,0,0.35);
     backdrop-filter:blur(16px);
-    transform:translateY(24px);
+    transform:translateY(30px) scale(0.98);
     opacity:0;
     transition:var(--transition);
     position:relative;
     overflow:hidden;
   }
 
-  .card.show {
-    opacity:1;
-    transform:translateY(0);
+  .card.show { opacity:1; transform:translateY(0) scale(1); animation:popIn .6s ease-out; }
+
+  @keyframes popIn {
+    0% {transform:translateY(30px) scale(0.95);opacity:0;}
+    100% {transform:translateY(0) scale(1);opacity:1;}
   }
 
   .card:hover {
-    transform:translateY(-6px) scale(1.015);
+    transform:translateY(-5px) scale(1.015);
     box-shadow:0 12px 40px rgba(59,130,246,0.35);
   }
 
@@ -428,6 +421,7 @@ function dashboardHTML(data) {
     color:#a1aecb;
   }
 
+  /* 进度条 */
   .progress {
     margin-top:16px;
     height:12px;
@@ -437,6 +431,8 @@ function dashboardHTML(data) {
     position:relative;
   }
 
+  body.light .progress { background:rgba(0,0,0,0.08); }
+
   .fill {
     height:100%;
     border-radius:999px;
@@ -445,11 +441,45 @@ function dashboardHTML(data) {
     animation:move 4s linear infinite;
     box-shadow:0 0 14px rgba(59,130,246,0.35);
     width:0%;
+    position:relative;
+  }
+
+  body.light .fill {
+    background:linear-gradient(90deg,#34d399,#60a5fa,#a78bfa);
+    box-shadow:0 0 6px rgba(59,130,246,0.2);
   }
 
   @keyframes move {
     0% {background-position:0%}
     100% {background-position:-300%}
+  }
+
+  /* Tooltip */
+  .fill::after {
+    content:attr(data-tooltip);
+    position:absolute;
+    top:-34px;
+    right:0;
+    transform:translateX(50%);
+    padding:5px 10px;
+    font-size:.75rem;
+    color:#fff;
+    background:rgba(30,41,59,0.9);
+    border-radius:6px;
+    white-space:nowrap;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .3s, transform .3s;
+  }
+
+  body.light .fill::after {
+    background:rgba(255,255,255,0.95);
+    color:#1e293b;
+  }
+
+  .fill:hover::after {
+    opacity:1;
+    transform:translateX(50%) translateY(-6px);
   }
 
   .usage-text {
@@ -460,7 +490,23 @@ function dashboardHTML(data) {
     text-align:right;
   }
 
-  /* 骨架 */
+  /* 紧凑模式 */
+  body.compact .card {
+    border-radius:14px;
+    padding:16px 18px;
+    box-shadow:none;
+    background:rgba(24,32,51,0.55);
+  }
+
+  body.light.compact .card {
+    background:rgba(255,255,255,0.85);
+  }
+
+  body.compact .card:hover { transform:none; box-shadow:none; }
+  body.compact .meta { line-height:1.6; font-size:.9rem; }
+  body.compact .progress { height:8px; }
+
+  /* Skeleton & Loader */
   .skeleton {
     height:150px;
     border-radius:var(--radius);
@@ -468,10 +514,7 @@ function dashboardHTML(data) {
     background-size:200% 100%;
     animation:skeletonMove 1.4s infinite linear;
   }
-
-  @keyframes skeletonMove {
-    100%{background-position:-200% 0}
-  }
+  @keyframes skeletonMove { 100%{background-position:-200% 0} }
 
   #loader {
     position:fixed;
@@ -486,7 +529,6 @@ function dashboardHTML(data) {
     font-weight:600;
     animation:fadeOut .8s ease 1.2s forwards;
   }
-
   @keyframes fadeOut {to {opacity:0;visibility:hidden;}}
   @keyframes blink {to{opacity:.9;transform:scale(1.2);}}
 </style>
@@ -505,6 +547,7 @@ function dashboardHTML(data) {
     <div class="btns">
       <button id="refresh" class="btn">🔄 刷新数据</button>
       <button id="theme" class="btn">🌗 切换主题</button>
+      <button id="view" class="btn">🧭 视图模式</button>
       <form id="logoutForm" method="POST" action="/logout" style="margin:0;">
         <button type="submit" class="btn">⎋ 登出</button>
       </form>
@@ -518,16 +561,16 @@ function dashboardHTML(data) {
   <footer style="text-align:center;font-size:.8rem;opacity:.65;margin-bottom:24px;">©2025 <a href="https://github.com/arlettebrook" target="_blank" style="color:#60a5fa;text-decoration:none;">Arlettebrook</a></footer>
 
   <script>
-    const loader=document.getElementById('loader');
     const grid=document.getElementById('grid');
     const themeBtn=document.getElementById('theme');
+    const viewBtn=document.getElementById('view');
     const refresh=document.getElementById('refresh');
     const formatNumber=n=>n?.toLocaleString?.()||n;
     const escapeHtml=s=>String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
 
-    if(localStorage.getItem('theme')==='light'){
-      document.body.classList.add('light');
-    }
+    // 恢复主题与视图设置
+    if(localStorage.getItem('theme')==='light') document.body.classList.add('light');
+    if(localStorage.getItem('view')==='compact') document.body.classList.add('compact');
 
     window.addEventListener('load',()=>{
       setTimeout(()=>{
@@ -541,7 +584,7 @@ function dashboardHTML(data) {
               📦 总计：<b>${formatNumber(a.total)}</b><br>
               🎁 免费额度剩余：<b>${formatNumber(a.free_quota_remaining)}</b>
             </div>
-            <div class="progress"><div class="fill" data-target="${used}"></div></div>
+            <div class="progress"><div class="fill" data-target="${used}" data-tooltip="已使用 ${used}% | 剩余 ${(100-used).toFixed(1)}%"></div></div>
             <div class="usage-text"><span class="percent">0</span>% 已使用</div>
           </div>`;
         }).join("")}\`;
@@ -566,10 +609,15 @@ function dashboardHTML(data) {
       },350);
     });
 
+    // 按钮功能
     refresh.onclick=()=>{document.body.style.opacity=.6;setTimeout(()=>location.reload(),200)};
     themeBtn.onclick=()=>{
       document.body.classList.toggle('light');
       localStorage.setItem('theme',document.body.classList.contains('light')?'light':'dark');
+    };
+    viewBtn.onclick=()=>{
+      document.body.classList.toggle('compact');
+      localStorage.setItem('view',document.body.classList.contains('compact')?'compact':'card');
     };
   </script>
 </body>
