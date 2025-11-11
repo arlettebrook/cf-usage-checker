@@ -1,156 +1,125 @@
-/**
- * Cloudflare Usage Checker - Ultra Fast Version
- * Optimized for instant load + async refresh
- */
-
-const CF_API = "https://api.cloudflare.com/client/v4";
-const FREE_LIMIT = 100000;
-const CACHE_TTL = 300_000; // 5分钟缓存
-const cache = { data: null, ts: 0 };
-
 export default {
-  async fetch(req, env) {
-    const url = new URL(req.url);
-    const PASSWORD = env.PASSWORD;
-    const TOKENS = (env.MULTI_CF_API_TOKENS || "").split(",").map(x => x.trim()).filter(Boolean);
+  async fetch(request, env) {
+    const url = new URL(request.url);
+    const PASSWORD = env.PASSWORD || "mysecret";
 
-    if (!PASSWORD) return new Response("Missing PASSWORD", { status: 500 });
+    // 缓存密码哈希（首次计算后全局复用）
+    if (!globalThis._pwdHash) {
+      const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(PASSWORD));
+      globalThis._pwdHash = Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,"0")).join("");
+    }
+    const cookie = request.headers.get("Cookie") || "";
+    const m = cookie.match(/auth=([a-f0-9]{64})/);
+    const isLogin = m && m[1] === globalThis._pwdHash;
 
-    const cookie = req.headers.get("Cookie") || "";
-    const cookieHash = cookie.match(/auth=([a-f0-9]{64})/)?.[1];
-    const hash = await sha256(PASSWORD);
-    const loggedIn = cookieHash === hash;
-
-    // --- 登录路由 ---
-    if (url.pathname === "/login" && req.method === "POST") {
-      const f = await req.formData();
-      const pass = f.get("password") || "";
-      if (await sha256(pass) === hash) {
-        return html(`<meta http-equiv="refresh" content="1;url=/" />登录成功`, {
-          "Set-Cookie": `auth=${hash}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=86400`
+    // 登录请求
+    if (url.pathname==="/login" && request.method==="POST") {
+      const fd = await request.formData();
+      const pwd = fd.get("password") || "";
+      const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(pwd));
+      const hash = Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,"0")).join("");
+      if (hash === globalThis._pwdHash) {
+        return new Response(`<!DOCTYPE html><html><head><meta charset=utf-8><title>登录成功</title>
+        <style>body{margin:0;display:flex;justify-content:center;align-items:center;height:100vh;
+        background:linear-gradient(135deg,#89f7fe,#66a6ff);color:#fff;font-family:Segoe UI,sans-serif}
+        .c{padding:2rem 3rem;border-radius:1rem;background:rgba(255,255,255,.15);backdrop-filter:blur(10px)}
+        </style></head><body><div class=c><h2>✅ 登录成功</h2><p>跳转中...</p></div>
+        <script>setTimeout(()=>location.href='/',1200)</script></body></html>`,{
+          headers:{
+            "content-type":"text/html;charset=utf-8",
+            "set-cookie":`auth=${hash};Path=/;HttpOnly;Secure;SameSite=Lax;Max-Age=86400`
+          }
         });
       }
-      return html(renderLogin("密码错误"));
+      return new Response(await login("密码错误，请重试 🔒"),{headers:{"content-type":"text/html;charset=utf-8"}});
     }
 
-    if (url.pathname === "/logout") {
-      return html("已登出", { "Set-Cookie": "auth=; Path=/; Max-Age=0" });
-    }
+    // 登出
+    if (url.pathname==="/logout" && request.method==="POST")
+      return new Response("<script>location='/'</script>",{headers:{"set-cookie":"auth=;Path=/;Max-Age=0"}});
 
-    // --- API 接口 ---
-    if (url.pathname === "/api/usage") {
-      if (!loggedIn) return json({ success: false, error: "未登录" }, 401);
-      const data = await getUsage(TOKENS);
-      return json(data);
-    }
+    // 未登录
+    if (!isLogin) return new Response(await login(),{headers:{"content-type":"text/html;charset=utf-8"}});
 
-    // --- 主界面 ---
-    if (!loggedIn) return html(renderLogin());
-    return html(renderFastDashboard());
+    // 获取 Token
+    const tokens=(env.MULTI_CF_API_TOKENS||"").split(",").map(t=>t.trim()).filter(Boolean);
+    if(!tokens.length) return new Response(JSON.stringify({success:false,error:"无Token",accounts:[]}),{headers:{"content-type":"application/json"}});
+
+    const data=await usage(tokens);
+    return new Response(dash(data),{headers:{"content-type":"text/html;charset=utf-8"}});
   }
 };
 
-// ===== 异步接口逻辑 =====
-async function getUsage(tokens) {
-  const now = Date.now();
-  if (cache.data && now - cache.ts < CACHE_TTL) return { success: true, cached: true, accounts: cache.data };
-
-  try {
-    const accounts = (await Promise.all(tokens.map(fetchAccounts))).flat();
-    cache.data = accounts;
-    cache.ts = now;
-    return { success: true, accounts };
-  } catch (e) {
-    return { success: false, error: e.message, accounts: [] };
-  }
+// 登录页
+async function login(msg=""){
+  return `<!DOCTYPE html><html><head><meta charset=UTF-8><meta name=viewport content=width=device-width,initial-scale=1>
+  <title>登录</title><style>body{margin:0;display:flex;align-items:center;justify-content:center;height:100vh;
+  background:linear-gradient(135deg,#89f7fe,#66a6ff);font-family:Segoe UI}.c{background:#fff;padding:2rem;border-radius:1rem;
+  box-shadow:0 8px 24px rgba(0,0,0,.2);width:90%;max-width:320px;text-align:center}input,button{width:100%;padding:.7rem;
+  border-radius:.5rem;border:1px solid #ccc;margin-top:1rem;font-size:1rem}button{background:#0078f2;color:#fff;border:0}
+  button:hover{background:#005fcc}.e{margin-top:1rem;color:#e53935;font-size:.9rem}</style></head>
+  <body><div class=c><h2>🔐 请输入密码</h2><form method=POST action=/login>
+  <input type=password name=password placeholder=输入密码... required><button>登录</button>${msg?`<div class=e>${msg}</div>`:""}
+  </form></div></body></html>`;
 }
 
-async function fetchAccounts(token) {
-  const headers = { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" };
-  const res = await fetch(`${CF_API}/accounts`, { headers });
-  const data = await res.json();
-  const accounts = data.result || [];
-  return Promise.all(accounts.map(acc => fetchUsage(acc, headers)));
+// 并发池
+async function pool(tasks,c=5){
+  const res=[],exec=new Set();
+  for(const t of tasks){
+    const p=t().then(r=>{exec.delete(p);res.push(r);});
+    exec.add(p);if(exec.size>=c)await Promise.race(exec);
+  }await Promise.all(exec);return res.flat();
 }
 
-async function fetchUsage(acc, headers) {
-  const end = new Date().toISOString();
-  const start = new Date(Date.now() - 86400000).toISOString();
-  const body = {
-    query: `query($AccountID: String!, $filter: AccountWorkersInvocationsAdaptiveFilter_InputObject) {
-      viewer {
-        accounts(filter: { accountTag: $AccountID }) {
-          pagesFunctionsInvocationsAdaptiveGroups(limit: 1000, filter: $filter) { sum { requests } }
-          workersInvocationsAdaptive(limit: 10000, filter: $filter) { sum { requests } }
-        }
-      }
-    }`,
-    variables: { AccountID: acc.id, filter: { datetime_geq: start, datetime_leq: end } }
-  };
-  const res = await fetch(`${CF_API}/graphql`, { method: "POST", headers, body: JSON.stringify(body) });
-  const json = await res.json();
-  const viewer = json.data?.viewer?.accounts?.[0];
-  const sum = arr => arr?.reduce((t, i) => t + (i?.sum?.requests || 0), 0) || 0;
-  const pages = sum(viewer.pagesFunctionsInvocationsAdaptiveGroups);
-  const workers = sum(viewer.workersInvocationsAdaptive);
-  const total = pages + workers;
-  return { account_name: acc.name, pages, workers, total, free_quota_remaining: Math.max(0, FREE_LIMIT - total) };
+// 获取使用量
+async function usage(tokens){
+  const API="https://api.cloudflare.com/client/v4",FREE=100000,sum=a=>a?.reduce((t,i)=>t+(i?.sum?.requests||0),0)||0;
+  const now=new Date();now.setUTCHours(0,0,0,0);
+  try{
+    const all=tokens.map(T=>async()=>{const h={"Authorization":`Bearer ${T}`};
+      const acc=await fetch(`${API}/accounts`,{headers:h}).then(r=>r.json());
+      if(!acc?.result?.length)return [];
+      const jobs=acc.result.map(a=>async()=>{
+        const q={query:`query($id:String!,$f:AccountWorkersInvocationsAdaptiveFilter_InputObject){
+          viewer{accounts(filter:{accountTag:$id}){pagesFunctionsInvocationsAdaptiveGroups(limit:1000,filter:$f){sum{requests}}
+          workersInvocationsAdaptive(limit:10000,filter:$f){sum{requests}}}}}`,
+          variables:{id:a.id,f:{datetime_geq:now.toISOString(),datetime_leq:new Date().toISOString()}}};
+        const j=await fetch(`${API}/graphql`,{method:"POST",headers:{...h,"content-type":"application/json"},body:JSON.stringify(q)}).then(r=>r.json());
+        const v=j?.data?.viewer?.accounts?.[0]||{},pages=sum(v.pagesFunctionsInvocationsAdaptiveGroups),workers=sum(v.workersInvocationsAdaptive);
+        const total=pages+workers;return{account_name:a.name,pages,workers,total,free_quota_remaining:Math.max(0,FREE-total)};});
+      return pool(jobs,5);
+    });
+    const r=await pool(all,3);
+    return{success:true,accounts:r};
+  }catch(e){return{success:false,error:e.message,accounts:[]}}
 }
 
-// ===== 工具函数 =====
-const html = (body, headers = {}) => new Response(body, { headers: { "Content-Type": "text/html; charset=utf-8", ...headers } });
-const json = (obj, status = 200) => new Response(JSON.stringify(obj), { status, headers: { "Content-Type": "application/json" } });
-const sha256 = async str => Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str)))).map(b => b.toString(16).padStart(2, "0")).join("");
-
-// ===== 页面模板 =====
-function renderLogin(msg = "") {
-  return `
-<!doctype html><html><head><meta charset="utf-8"><title>登录</title>
-<style>
-body{font-family:sans-serif;display:flex;justify-content:center;align-items:center;height:100vh;background:#f5f7fa;}
-form{background:#fff;padding:2rem;border-radius:1rem;box-shadow:0 0 10px #0001;}
-input,button{padding:.6rem;border-radius:.5rem;border:1px solid #ccc;width:200px;margin-top:.5rem;}
-button{background:#4e9af1;color:white;border:none;cursor:pointer;width:100%;}
-p{color:red;text-align:center;}
-</style></head>
-<body><form method="POST" action="/login">
-<h3>🔒 Cloudflare Usage 登录</h3>
-<input type="password" name="password" placeholder="密码" required>
-<button type="submit">登录</button>
-${msg ? `<p>${msg}</p>` : ""}
-</form></body></html>`;
-}
-
-function renderFastDashboard() {
-  return `
-<!doctype html><html><head><meta charset="utf-8"><title>Cloudflare Usage</title>
-<style>
-body{font-family:sans-serif;margin:2rem;background:#fafafa;}
-table{border-collapse:collapse;width:100%;margin-top:1rem;}
-th,td{padding:.6rem 1rem;border-bottom:1px solid #ccc;text-align:left;}
-th{background:#e9f1ff;}
-tr:hover{background:#f0f8ff;}
-header{display:flex;justify-content:space-between;align-items:center;}
-button{padding:.4rem .8rem;border:none;border-radius:.4rem;background:#4e9af1;color:white;cursor:pointer;}
-footer{margin-top:1rem;color:#666;text-align:center;font-size:.9rem;}
-</style>
-</head>
-<body>
-<header>
-  <h2>☁️ Cloudflare Usage Dashboard</h2>
-  <button onclick="logout()">登出</button>
-</header>
-<table id="tbl"><thead><tr><th>账户</th><th>Pages</th><th>Workers</th><th>总调用</th><th>剩余额度</th></tr></thead><tbody><tr><td colspan="5">加载中...</td></tr></tbody></table>
-<footer>加载中数据来自 Cloudflare API · 缓存5分钟</footer>
-<script>
-async function load(){
-  const r=await fetch('/api/usage');const j=await r.json();
-  const t=document.querySelector('#tbl tbody');
-  if(!j.success)return t.innerHTML='<tr><td colspan=5>'+j.error+'</td></tr>';
-  t.innerHTML=j.accounts.map(a=>'<tr><td>'+a.account_name+'</td><td>'+a.pages+'</td><td>'+a.workers+'</td><td>'+a.total+'</td><td>'+a.free_quota_remaining+'</td></tr>').join('');
-}
-function logout(){location.href='/logout';}
-load();
-</script>
-</body></html>`;
+// 仪表盘HTML
+function dash(d){
+  return `<!DOCTYPE html><html lang=zh-CN><head><meta charset=UTF-8><meta name=viewport content=width=device-width,initial-scale=1>
+  <title>Cloudflare Usage</title><link href=https://cdn.jsdelivr.net/npm/tailwindcss@3.4.1/dist/tailwind.min.css rel=stylesheet>
+  <style>body{font-family:Inter,Segoe UI,sans-serif;transition:.3s;background:#f9fafb;color:#1e293b;min-height:100vh}
+  html.dark body{background:#111827;color:#f9fafb}</style></head>
+  <body class=p-6><nav class="flex justify-between items-center bg-blue-500 text-white p-4 rounded-xl shadow mb-6">
+  <h1 class="font-bold text-lg">☁️ CF Usage 仪表盘</h1><div><button id=r class="mr-2 px-3 py-1 bg-white/20 rounded-full">刷新</button>
+  <button id=t class="px-3 py-1 bg-white/20 rounded-full">主题</button></div></nav>
+  <main class="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+  ${d.accounts.map(a=>{
+    const u=(a.total/(a.total+a.free_quota_remaining)*100).toFixed(1);
+    return `<div class="p-5 rounded-xl bg-white dark:bg-slate-800 shadow">
+      <h2 class="font-bold text-blue-600 dark:text-blue-400 mb-2">${a.account_name}</h2>
+      <p>📄 Pages: <b>${a.pages.toLocaleString()}</b></p>
+      <p>⚙️ Workers: <b>${a.workers.toLocaleString()}</b></p>
+      <p>📦 总计: <b>${a.total.toLocaleString()}</b></p>
+      <p>🎁 剩余额度: <b>${a.free_quota_remaining.toLocaleString()}</b></p>
+      <div class="h-2 bg-gray-200 dark:bg-gray-700 rounded-full mt-2"><div style="width:${u}%"
+      class="h-full rounded-full bg-gradient-to-r from-green-400 to-blue-500"></div></div>
+      <p class="text-sm opacity-75 mt-1">${u}% 已使用</p></div>`;}).join("")}
+  </main><footer class="text-center mt-8 text-sm opacity-75">©2025 <a href=https://github.com/arlettebrook class=text-blue-500>Arlettebrook</a></footer>
+  <script>
+    r.onclick=()=>{document.body.style.opacity=0.6;setTimeout(()=>location.reload(),300)};
+    const rt=document.documentElement;if(localStorage.theme==='dark'||(!localStorage.theme&&matchMedia('(prefers-color-scheme:dark)').matches))rt.classList.add('dark');
+    t.onclick=()=>{rt.classList.toggle('dark');localStorage.theme=rt.classList.contains('dark')?'dark':'light'};
+  </script></body></html>`;
 }
