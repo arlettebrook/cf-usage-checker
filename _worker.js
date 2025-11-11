@@ -71,14 +71,14 @@ async function loginPage(message = "") {
     }
   </style>
 </head>
-<body class="flex items-center justify-center min-h-screen bg-gradient-to-tr from-indigo-500 via-cyan-400 to-purple-500 bg-[length:300%_300%] animate-[gradientMove_14s_ease-in-out_infinite] text-white font-[Inter,'Segoe_UI',system-ui,-apple-system,'Helvetica_Neue',Arial] antialiased p-6">
+<body class="flex items-center justify-center min-h-screen bg-gradient-to-br from-sky-500 via-indigo-500 to-violet-600 bg-[length:300%_300%] animate-[gradientMove_16s_ease-in-out_infinite] text-white font-[Inter,'Segoe_UI',system-ui,-apple-system,'Helvetica_Neue',Arial] antialiased p-6">
   <div class="relative w-full max-w-sm mx-auto">
-    <div class="absolute inset-x-0 -bottom-10 h-48 rounded-full bg-[radial-gradient(closest-side,rgba(255,255,255,0.08),transparent_40%)] blur-3xl pointer-events-none"></div>
-    
-    <div class="relative bg-white/10 border border-white/10 backdrop-blur-xl rounded-2xl shadow-xl transition-all duration-500 hover:translate-y-0 hover:shadow-[0_18px_60px_rgba(14,18,35,0.38)] transform translate-y-1.5">
+    <div class="absolute inset-x-0 -bottom-10 h-48 rounded-full bg-[radial-gradient(closest-side,rgba(255,255,255,0.1),transparent_45%)] blur-3xl pointer-events-none"></div>
+
+    <div class="relative bg-white/15 border border-white/10 backdrop-blur-xl rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.35)] transition-all duration-500 hover:translate-y-0 hover:shadow-[0_28px_70px_rgba(0,0,0,0.45)] transform translate-y-1.5">
       <div class="p-7 md:p-8">
-        <h1 class="text-lg font-semibold mb-2">🔐 受保护的仪表盘访问</h1>
-        <p class="text-sm text-white/80 mb-5 leading-relaxed">请输入预设密码以访问 Cloudflare 使用量仪表盘。</p>
+        <h1 class="text-lg font-semibold mb-2">🔐 安全访问面板</h1>
+        <p class="text-sm text-white/80 mb-5 leading-relaxed">请输入访问密码以进入 Cloudflare 仪表盘。</p>
 
         <form method="POST" action="/login" autocomplete="off" class="flex flex-col gap-3">
           <input
@@ -87,12 +87,12 @@ async function loginPage(message = "") {
             required
             placeholder="输入访问密码"
             aria-label="密码"
-            class="w-full px-4 py-3 text-center text-base text-white placeholder-white/70 bg-white/5 border border-white/10 rounded-xl outline-none focus:ring-2 focus:ring-indigo-400 focus:translate-y-[-1px] transition-all duration-150"
+            class="w-full px-4 py-3 text-center text-base text-white placeholder-white/60 bg-white/5 border border-white/10 rounded-xl outline-none focus:ring-2 focus:ring-sky-400 focus:bg-white/10 focus:translate-y-[-1px] transition-all duration-150"
           />
           <div class="flex gap-3 items-center">
             <button
               type="submit"
-              class="flex-1 py-2.5 rounded-full font-semibold bg-gradient-to-r from-blue-500 to-purple-500 shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/30 transition-transform duration-200 active:translate-y-0.5"
+              class="flex-1 py-2.5 rounded-full font-semibold bg-gradient-to-r from-sky-500 to-violet-500 shadow-lg shadow-violet-500/30 hover:shadow-violet-500/40 transition-transform duration-200 active:translate-y-0.5"
             >
               登录
             </button>
@@ -105,10 +105,16 @@ async function loginPage(message = "") {
             </button>
           </div>
 
-          ${message ? `<div class="mt-2 p-3 rounded-lg bg-red-500/10 border border-white/10 text-red-200 text-sm" role="alert">${message}</div>` : ''}
+          ${
+            message
+              ? `<div class="mt-3 p-3 rounded-lg bg-rose-500/15 border border-rose-400/20 text-rose-200 text-sm font-medium" role="alert">
+                  ${message}
+                </div>`
+              : ""
+          }
         </form>
 
-        <div class="text-center text-white/70 text-xs mt-5">Cloudflare Workers • 受保护访问</div>
+        <div class="text-center text-white/60 text-xs mt-5 tracking-wide">Cloudflare Workers • 受保护访问</div>
       </div>
     </div>
   </div>
