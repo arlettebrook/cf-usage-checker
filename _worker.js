@@ -510,9 +510,6 @@ function dashboardHTML(data) {
     <div class="nav-btn">
       <button id="refresh-btn">🔄 刷新数据</button>
       <button id="theme-toggle">🌗 切换主题</button>
-      <form id="logoutForm" method="POST" action="/logout" style="margin:0;">
-        <button type="submit" class="bg-white/25 px-4 py-2 rounded-full text-white font-medium hover:bg-white/40 transition">⎋ 登出</button>
-      </form>
     </div>
   </nav>
 
