@@ -22,7 +22,7 @@ export default {
         return new Response(loginSuccess(hash), {
           headers: {
             "content-type": "text/html; charset=utf-8",
-            "set-cookie": `auth=${hash}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=86400`
+            "set-cookie": `auth=${hash}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=2592000`
           }
         });
       }
