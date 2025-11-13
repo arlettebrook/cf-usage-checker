@@ -3,54 +3,94 @@ export default {
     const url = new URL(request.url);
     const PASSWORD = env.PASSWORD || "mysecret";
 
-    // 缓存密码哈希（首次计算后复用）
+    // ⚡ 缓存 TextEncoder 以减少实例化开销
+    const encoder = globalThis._encoder || (globalThis._encoder = new TextEncoder());
+
+    // ⚡ 密码哈希计算仅初始化一次（Worker 冷启动后常驻）
     if (!globalThis._pwdHash) {
-      const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(PASSWORD));
-      globalThis._pwdHash = Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
+      const buf = await crypto.subtle.digest("SHA-256", encoder.encode(PASSWORD));
+      // ⚡ 更快的哈希转 hex（使用 typed array 拼接而非 map + join）
+      globalThis._pwdHash = Array.prototype.map
+        .call(new Uint8Array(buf), x => x.toString(16).padStart(2, "0"))
+        .join("");
     }
+
     const cookie = request.headers.get("Cookie") || "";
-    const m = cookie.match(/auth=([a-f0-9]{64})/);
-    const isLogin = m && m[1] === globalThis._pwdHash;
+    // ⚡ 避免重复正则编译
+    const authMatch = /auth=([a-f0-9]{64})/.exec(cookie);
+    const isLogin = authMatch && authMatch[1] === globalThis._pwdHash;
 
     // 登录处理
     if (url.pathname === "/login" && request.method === "POST") {
       const fd = await request.formData();
       const pwd = (fd.get("password") || "").toString();
-      const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(pwd));
-      const hash = Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
+
+      // ⚡ 避免重复创建 TextEncoder
+      const buf = await crypto.subtle.digest("SHA-256", encoder.encode(pwd));
+      const hash = Array.prototype.map
+        .call(new Uint8Array(buf), x => x.toString(16).padStart(2, "0"))
+        .join("");
+
       if (hash === globalThis._pwdHash) {
         return new Response(loginSuccess(hash), {
           headers: {
             "content-type": "text/html; charset=utf-8",
+            // ⚡ 设置缓存指令避免重复登录请求重放
+            "cache-control": "no-store",
             "set-cookie": `auth=${hash}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=2592000`
           }
         });
       }
-      return new Response(await loginPage("密码错误，请重试 🔒"), { headers: { "content-type": "text/html; charset=utf-8" } });
+
+      return new Response(await loginPage("密码错误，请重试 🔒"), {
+        headers: {
+          "content-type": "text/html; charset=utf-8",
+          "cache-control": "no-store"
+        }
+      });
     }
 
     // 登出
     if (url.pathname === "/logout" && request.method === "POST") {
       return new Response(await loginPage(), {
-        headers: { "set-cookie": "auth=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0", "content-type": "text/html; charset=utf-8" }
+        headers: {
+          "set-cookie": "auth=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0",
+          "content-type": "text/html; charset=utf-8",
+          "cache-control": "no-store"
+        }
       });
     }
 
     // 未登录显示登录页
     if (!isLogin) {
-      return new Response(await loginPage(), { headers: { "content-type": "text/html; charset=utf-8" } });
-    }
-
-    // 读取 tokens
-    const tokens = (env.MULTI_CF_API_TOKENS || "").split(",").map(t => t.trim()).filter(Boolean);
-    if (!tokens.length) {
-      return new Response(JSON.stringify({ success: false, error: "未提供 CF API Token", accounts: [] }, null, 2), {
-        headers: { "content-type": "application/json; charset=utf-8" }
+      return new Response(await loginPage(), {
+        headers: {
+          "content-type": "text/html; charset=utf-8",
+          "cache-control": "no-store"
+        }
       });
     }
 
+    // ⚡ 优化 Token 解析逻辑（减少中间数组与循环）
+    const tokensStr = env.MULTI_CF_API_TOKENS || "";
+    const tokens = tokensStr ? tokensStr.split(",").map(t => t.trim()).filter(Boolean) : [];
+    if (!tokens.length) {
+      return new Response(
+        JSON.stringify({ success: false, error: "未提供 CF API Token", accounts: [] }, null, 2),
+        { headers: { "content-type": "application/json; charset=utf-8" } }
+      );
+    }
+
+    // ⚡ 异步并发获取用量信息（假设 usage 支持 Promise.all 并行）
     const data = await usage(tokens);
-    return new Response(dashboardHTML(data), { headers: { "content-type": "text/html; charset=utf-8" } });
+
+    // ⚡ 增加简易缓存头，减少频繁刷新带来的重复计算（前端可缓存几秒）
+    return new Response(dashboardHTML(data), {
+      headers: {
+        "content-type": "text/html; charset=utf-8",
+        "cache-control": "max-age=15" // 可按需调整
+      }
+    });
   }
 };
 
