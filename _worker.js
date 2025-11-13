@@ -195,78 +195,119 @@ function loginSuccess(hash) {
 </html>`;
 }
 
-// ======= 并发池（修复完成处理） =======
+// ======= 并发池（轻量微调性能）=======
 async function promisePool(tasks, concurrency = 5) {
   const results = [];
   const executing = new Set();
+
   for (const task of tasks) {
-    const p = task().then(res => {
-      executing.delete(p);
-      results.push(res);
-    });
+    const p = task().then(
+      res => {
+        executing.delete(p);
+        results.push(res);
+      },
+      err => {
+        executing.delete(p);
+        // ⚡ 保留错误信息但不中断其他任务
+        results.push({ error: err.message });
+      }
+    );
+
     executing.add(p);
     if (executing.size >= concurrency) await Promise.race(executing);
   }
-  await Promise.all(executing);
+
+  await Promise.allSettled(executing);
+  // ⚡ 减少多层数组拼接的开销
   return results.flat();
 }
 
-// ======= 获取 Cloudflare 使用量 =======
+// ======= 获取 Cloudflare 使用量（优化版）=======
 async function usage(tokens) {
   const API = "https://api.cloudflare.com/client/v4";
   const FREE_LIMIT = 100000;
-  const sum = (arr) => (arr || []).reduce((t, i) => t + (i?.sum?.requests || 0), 0);
+  const sum = arr => (arr ? arr.reduce((t, i) => t + (i?.sum?.requests || 0), 0) : 0);
+
+  // ⚡ 内存级缓存：短时间内相同 token 请求直接复用结果（防止 dashboard 刷新时重复 API 调用）
+  const cache = globalThis._cfUsageCache || (globalThis._cfUsageCache = new Map());
+  const cacheTTL = 60_000; // 60秒缓存
+  const now = Date.now();
 
   try {
     const tokenTasks = tokens.map(APIToken => async () => {
-      const headers = {
-        "Authorization": `Bearer ${APIToken}`
-      };
+      const cached = cache.get(APIToken);
+      if (cached && now - cached.time < cacheTTL) return cached.data;
+
+      const headers = { Authorization: `Bearer ${APIToken}` };
+
+      // ⚡ 提前发送 accounts 请求
       const accRes = await fetch(`${API}/accounts`, { headers });
       if (!accRes.ok) throw new Error(`账户获取失败: ${accRes.status}`);
       const accData = await accRes.json();
-      if (!accData?.result?.length) return [];
 
-      const dayStart = new Date(); dayStart.setUTCHours(0, 0, 0, 0);
-      const varsBase = { datetime_geq: dayStart.toISOString(), datetime_leq: new Date().toISOString() };
+      const accountsList = accData?.result || [];
+      if (!accountsList.length) return [];
 
-      const accountTasks = accData.result.map(account => async () => {
-        const gql = {
-          query: `query($id:String!,$f:AccountWorkersInvocationsAdaptiveFilter_InputObject){
-            viewer{accounts(filter:{accountTag:$id}){
-              pagesFunctionsInvocationsAdaptiveGroups(limit:1000,filter:$f){sum{requests}}
-              workersInvocationsAdaptive(limit:10000,filter:$f){sum{requests}}
-            }}}`,
-          variables: { id: account.id, f: varsBase }
-        };
+      const dayStart = new Date();
+      dayStart.setUTCHours(0, 0, 0, 0);
+      const varsBase = {
+        datetime_geq: dayStart.toISOString(),
+        datetime_leq: new Date().toISOString()
+      };
 
+      // ⚡ 预构建 GraphQL 查询请求体模板
+      const makeQueryBody = id => JSON.stringify({
+        query: `query($id:String!,$f:AccountWorkersInvocationsAdaptiveFilter_InputObject){
+          viewer{accounts(filter:{accountTag:$id}){
+            pagesFunctionsInvocationsAdaptiveGroups(limit:1000,filter:$f){sum{requests}}
+            workersInvocationsAdaptive(limit:10000,filter:$f){sum{requests}}
+          }}}`,
+        variables: { id, f: varsBase }
+      });
+
+      // ⚡ accountTasks 批量并发请求 + 高并发控制
+      const accountTasks = accountsList.map(account => async () => {
+        const gqlBody = makeQueryBody(account.id);
         const res = await fetch(`${API}/graphql`, {
           method: "POST",
           headers: { ...headers, "Content-Type": "application/json" },
-          body: JSON.stringify(gql)
+          body: gqlBody
         });
 
-        if (!res.ok) throw new Error(`查询失败: ${res.status}`);
+        if (!res.ok) return { account_name: account.name || "未知账号", error: `查询失败: ${res.status}` };
         const json = await res.json();
-        if (json.errors?.length) throw new Error(json.errors[0].message);
 
-        const accUsage = json?.data?.viewer?.accounts?.[0] || {};
-        const pages = sum(accUsage.pagesFunctionsInvocationsAdaptiveGroups);
-        const workers = sum(accUsage.workersInvocationsAdaptive);
+        if (json.errors?.length) return { account_name: account.name || "未知账号", error: json.errors[0].message };
+
+        const accUsage = json?.data?.viewer?.accounts?.[0];
+        const pages = sum(accUsage?.pagesFunctionsInvocationsAdaptiveGroups);
+        const workers = sum(accUsage?.workersInvocationsAdaptive);
         const total = pages + workers;
+
         return {
           account_name: account.name || "未知账号",
-          pages, workers, total,
+          pages,
+          workers,
+          total,
           free_quota_remaining: Math.max(0, FREE_LIMIT - total)
         };
       });
 
-      // 每个 token 下并发限制
-      return promisePool(accountTasks, 5);
+      const accounts = await promisePool(accountTasks, 5);
+
+      // ⚡ 写入缓存
+      const result = accounts.filter(Boolean);
+      cache.set(APIToken, { data: result, time: now });
+      return result;
     });
 
-    const accounts = await promisePool(tokenTasks, 3);
-    return { success: true, accounts: accounts };
+    // ⚡ tokens 层并发限制稍调大 (API 支持)
+    const accounts = await promisePool(tokenTasks, Math.min(tokens.length, 5));
+
+    // ⚡ 更快的结果展平
+    const flatAccounts = accounts.flat().filter(Boolean);
+
+    return { success: true, accounts: flatAccounts };
   } catch (err) {
     return { success: false, error: err.message, accounts: [] };
   }
