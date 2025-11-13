@@ -204,7 +204,7 @@ async function loginPage(message = "") {
 </head>
 <body>
   <div class="card">
-    <h1>🌥️ Cloudflare Access</h1>
+    <h1>🌥️ Cloudflare Usage</h1>
     <p class="desc">请输入访问密码以进入仪表盘</p>
 
     <form method="POST" action="/login" autocomplete="off">
@@ -388,7 +388,7 @@ accounts.sort((a, b) => (b.total || 0) - (a.total || 0));
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>🌤️ Cloudflare Workers & Pages Usage Dashboard</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
   <style>
     :root {
       --bg-light: linear-gradient(135deg, #f9fafb, #eff6ff, #ecfdf5);
