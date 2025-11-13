@@ -95,8 +95,11 @@ export default {
 };
 
 // ======= 登录页（美化 + 交互） =======
+// ⚡ 保留原函数名与返回结构
 async function loginPage(message = "") {
-  return `<!doctype html>
+  // 冷启动时缓存 HTML 模板（减少字符串拼接和内存分配）
+  if (!globalThis._baseLoginHTML) {
+    globalThis._baseLoginHTML = `<!doctype html>
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8" />
@@ -145,13 +148,7 @@ async function loginPage(message = "") {
             </button>
           </div>
 
-          ${
-            message
-              ? `<div class="mt-3 p-3 rounded-lg bg-rose-500/15 border border-rose-400/20 text-rose-200 text-sm font-medium" role="alert">
-                  ${message}
-                </div>`
-              : ""
-          }
+          <!--MSG_PLACEHOLDER-->
         </form>
 
         <div class="text-center text-white/60 text-xs mt-5 tracking-wide">Cloudflare Workers • 受保护访问</div>
@@ -160,6 +157,15 @@ async function loginPage(message = "") {
   </div>
 </body>
 </html>`;
+  }
+
+  // ⚡ 使用缓存模板，仅在有 message 时插入动态块
+  if (message) {
+    const msgHTML = `<div class="mt-3 p-3 rounded-lg bg-rose-500/15 border border-rose-400/20 text-rose-200 text-sm font-medium" role="alert">${message}</div>`;
+    return globalThis._baseLoginHTML.replace("<!--MSG_PLACEHOLDER-->", msgHTML);
+  }
+
+  return globalThis._baseLoginHTML.replace("<!--MSG_PLACEHOLDER-->", "");
 }
 
 // 登录成功页面（简洁过渡）
