@@ -94,78 +94,70 @@ export default {
   }
 };
 
-// ======= 登录页（美化 + 交互） =======
-// ⚡ 保留原函数名与返回结构
+
+// ======= 登录页（性能优化版，UI/功能不变） =======
 async function loginPage(message = "") {
-  // 冷启动时缓存 HTML 模板（减少字符串拼接和内存分配）
   if (!globalThis._baseLoginHTML) {
+    // ⚡ 仅保留关键 Tailwind 样式（去 CDN 阻塞）
+    const criticalCSS = `
+      *,::before,::after{box-sizing:border-box}
+      body{margin:0;display:flex;align-items:center;justify-content:center;min-height:100vh;
+        font-family:Inter,Segoe UI,system-ui,-apple-system,Helvetica Neue,Arial,sans-serif;
+        background:linear-gradient(135deg,#38bdf8,#6366f1,#8b5cf6);
+        background-size:200% 200%;
+        animation:moveGradient 18s ease-in-out infinite;
+        color:#fff;overflow:hidden;padding:1.5rem}
+      @keyframes moveGradient{0%{background-position:0 50%}50%{background-position:100% 50%}100%{background-position:0 50%}}
+      input,button{font:inherit}
+      input{width:100%;padding:.75rem 1rem;text-align:center;border:none;border-radius:.75rem;background:rgba(255,255,255,.08);
+        color:#fff;outline:none;transition:.2s}
+      input:focus{background:rgba(255,255,255,.15);box-shadow:0 0 0 2px rgba(56,189,248,.6)}
+      button{cursor:pointer;transition:transform .2s,box-shadow .2s}
+      .login-box{background:rgba(255,255,255,.12);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.15);
+        border-radius:1rem;box-shadow:0 20px 50px rgba(0,0,0,.35);padding:2rem 2.2rem;width:100%;max-width:22rem;text-align:center}
+      .login-box:hover{transform:translateY(-1px);box-shadow:0 25px 60px rgba(0,0,0,.4)}
+      .btn{display:inline-block;border-radius:9999px;padding:.6rem 1.2rem;font-weight:600;color:#fff}
+      .btn-primary{background:linear-gradient(90deg,#38bdf8,#8b5cf6);box-shadow:0 4px 16px rgba(139,92,246,.3)}
+      .btn-primary:hover{box-shadow:0 6px 20px rgba(139,92,246,.4)}
+      .btn-clear{border:1px solid rgba(255,255,255,.2);margin-left:.6rem}
+      small{display:block;margin-top:1rem;color:rgba(255,255,255,.6);font-size:.75rem}
+    `;
+
     globalThis._baseLoginHTML = `<!doctype html>
 <html lang="zh-CN">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>安全登录</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    @keyframes gradientMove {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
-    }
-  </style>
+  <style>${criticalCSS}</style>
 </head>
-<body class="flex items-center justify-center min-h-screen bg-gradient-to-br from-sky-500 via-indigo-500 to-violet-600 bg-[length:300%_300%] animate-[gradientMove_16s_ease-in-out_infinite] text-white font-[Inter,'Segoe_UI',system-ui,-apple-system,'Helvetica_Neue',Arial] antialiased p-6">
-  <div class="relative w-full max-w-sm mx-auto">
-    <div class="absolute inset-x-0 -bottom-10 h-48 rounded-full bg-[radial-gradient(closest-side,rgba(255,255,255,0.1),transparent_45%)] blur-3xl pointer-events-none"></div>
+<body>
+  <div class="login-box">
+    <h1 style="font-size:1.2rem;font-weight:600;margin-bottom:.5rem">🔐 安全访问面板</h1>
+    <p style="color:rgba(255,255,255,.8);font-size:.9rem;margin-bottom:1.2rem">请输入访问密码以进入 Cloudflare 仪表盘。</p>
 
-    <div class="relative bg-white/15 border border-white/10 backdrop-blur-xl rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.35)] transition-all duration-500 hover:translate-y-0 hover:shadow-[0_28px_70px_rgba(0,0,0,0.45)] transform translate-y-1.5">
-      <div class="p-7 md:p-8">
-        <h1 class="text-lg font-semibold mb-2">🔐 安全访问面板</h1>
-        <p class="text-sm text-white/80 mb-5 leading-relaxed">请输入访问密码以进入 Cloudflare 仪表盘。</p>
-
-        <form method="POST" action="/login" autocomplete="off" class="flex flex-col gap-3">
-          <input
-            type="password"
-            name="password"
-            required
-            placeholder="输入访问密码"
-            aria-label="密码"
-            class="w-full px-4 py-3 text-center text-base text-white placeholder-white/60 bg-white/5 border border-white/10 rounded-xl outline-none focus:ring-2 focus:ring-sky-400 focus:bg-white/10 focus:translate-y-[-1px] transition-all duration-150"
-          />
-          <div class="flex gap-3 items-center">
-            <button
-              type="submit"
-              class="flex-1 py-2.5 rounded-full font-semibold bg-gradient-to-r from-sky-500 to-violet-500 shadow-lg shadow-violet-500/30 hover:shadow-violet-500/40 transition-transform duration-200 active:translate-y-0.5"
-            >
-              登录
-            </button>
-            <button
-              type="button"
-              onclick="document.querySelector('input[name=password]').value='';document.querySelector('input[name=password]').focus();"
-              class="px-4 py-2.5 border border-white/10 rounded-full text-white/90 hover:bg-white/10 transition"
-            >
-              清除
-            </button>
-          </div>
-
-          <!--MSG_PLACEHOLDER-->
-        </form>
-
-        <div class="text-center text-white/60 text-xs mt-5 tracking-wide">Cloudflare Workers • 受保护访问</div>
+    <form method="POST" action="/login" autocomplete="off">
+      <input type="password" name="password" required placeholder="输入访问密码" aria-label="密码"/>
+      <div style="margin-top:.8rem">
+        <button type="submit" class="btn btn-primary">登录</button>
+        <button type="button" class="btn btn-clear" onclick="document.querySelector('input[name=password]').value='';document.querySelector('input[name=password]').focus();">清除</button>
       </div>
-    </div>
+
+      <!--MSG_PLACEHOLDER-->
+    </form>
+    <small>Cloudflare Workers • 受保护访问</small>
   </div>
 </body>
 </html>`;
   }
 
-  // ⚡ 使用缓存模板，仅在有 message 时插入动态块
-  if (message) {
-    const msgHTML = `<div class="mt-3 p-3 rounded-lg bg-rose-500/15 border border-rose-400/20 text-rose-200 text-sm font-medium" role="alert">${message}</div>`;
-    return globalThis._baseLoginHTML.replace("<!--MSG_PLACEHOLDER-->", msgHTML);
-  }
-
-  return globalThis._baseLoginHTML.replace("<!--MSG_PLACEHOLDER-->", "");
+  // 动态插入消息（保持原逻辑）
+  return globalThis._baseLoginHTML.replace(
+    "<!--MSG_PLACEHOLDER-->",
+    message
+      ? `<p style="margin-top:1rem;color:#f87171;font-size:.9rem;">${message}</p>`
+      : ""
+  );
 }
 
 // 登录成功页面（简洁过渡）
