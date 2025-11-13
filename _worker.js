@@ -98,29 +98,86 @@ export default {
 // ======= 登录页（性能优化版，UI/功能不变） =======
 async function loginPage(message = "") {
   if (!globalThis._baseLoginHTML) {
-    // ⚡ 仅保留关键 Tailwind 样式（去 CDN 阻塞）
-    const criticalCSS = `
-      *,::before,::after{box-sizing:border-box}
-      body{margin:0;display:flex;align-items:center;justify-content:center;min-height:100vh;
-        font-family:Inter,Segoe UI,system-ui,-apple-system,Helvetica Neue,Arial,sans-serif;
-        background:linear-gradient(135deg,#38bdf8,#6366f1,#8b5cf6);
-        background-size:200% 200%;
-        animation:moveGradient 18s ease-in-out infinite;
-        color:#fff;overflow:hidden;padding:1.5rem}
-      @keyframes moveGradient{0%{background-position:0 50%}50%{background-position:100% 50%}100%{background-position:0 50%}}
-      input,button{font:inherit}
-      input{width:100%;padding:.75rem 1rem;text-align:center;border:none;border-radius:.75rem;background:rgba(255,255,255,.08);
-        color:#fff;outline:none;transition:.2s}
-      input:focus{background:rgba(255,255,255,.15);box-shadow:0 0 0 2px rgba(56,189,248,.6)}
-      button{cursor:pointer;transition:transform .2s,box-shadow .2s}
-      .login-box{background:rgba(255,255,255,.12);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.15);
-        border-radius:1rem;box-shadow:0 20px 50px rgba(0,0,0,.35);padding:2rem 2.2rem;width:100%;max-width:22rem;text-align:center}
-      .login-box:hover{transform:translateY(-1px);box-shadow:0 25px 60px rgba(0,0,0,.4)}
-      .btn{display:inline-block;border-radius:9999px;padding:.6rem 1.2rem;font-weight:600;color:#fff}
-      .btn-primary{background:linear-gradient(90deg,#38bdf8,#8b5cf6);box-shadow:0 4px 16px rgba(139,92,246,.3)}
-      .btn-primary:hover{box-shadow:0 6px 20px rgba(139,92,246,.4)}
-      .btn-clear{border:1px solid rgba(255,255,255,.2);margin-left:.6rem}
-      small{display:block;margin-top:1rem;color:rgba(255,255,255,.6);font-size:.75rem}
+    const css = `
+      *{box-sizing:border-box;margin:0;padding:0}
+      body{
+        font-family:"Inter","Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial;
+        display:flex;align-items:center;justify-content:center;
+        min-height:100vh;padding:1.5rem;
+        background:linear-gradient(135deg,#0ea5e9,#6366f1,#8b5cf6);
+        background-size:250% 250%;
+        animation:gradient 18s ease infinite;
+        color:#fff;
+      }
+      @keyframes gradient{
+        0%{background-position:0% 50%}
+        50%{background-position:100% 50%}
+        100%{background-position:0% 50%}
+      }
+      .card{
+        position:relative;
+        width:100%;max-width:22rem;
+        padding:2.5rem 2rem;
+        background:rgba(255,255,255,.1);
+        border:1px solid rgba(255,255,255,.2);
+        border-radius:1.25rem;
+        backdrop-filter:blur(16px);
+        box-shadow:0 15px 50px rgba(0,0,0,.35);
+        transition:all .3s ease;
+      }
+      .card:hover{
+        transform:translateY(-2px);
+        box-shadow:0 20px 60px rgba(0,0,0,.45);
+      }
+      h1{
+        font-size:1.3rem;font-weight:600;margin-bottom:.4rem;
+        background:linear-gradient(90deg,#38bdf8,#a855f7);
+        -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+      }
+      p.desc{
+        font-size:.9rem;color:rgba(255,255,255,.75);margin-bottom:1.5rem;
+      }
+      form{display:flex;flex-direction:column;gap:.8rem}
+      input{
+        padding:.75rem 1rem;text-align:center;border:none;border-radius:.75rem;
+        background:rgba(255,255,255,.08);color:#fff;font-size:.95rem;
+        outline:none;transition:all .2s ease;
+      }
+      input::placeholder{color:rgba(255,255,255,.55)}
+      input:focus{
+        background:rgba(255,255,255,.15);
+        box-shadow:0 0 0 2px rgba(56,189,248,.5);
+        transform:translateY(-1px);
+      }
+      .btn{
+        border:none;cursor:pointer;border-radius:9999px;
+        font-weight:600;color:#fff;padding:.65rem 1rem;
+        transition:all .25s ease;font-size:.95rem;
+      }
+      .btn-login{
+        background:linear-gradient(90deg,#38bdf8,#6366f1,#8b5cf6);
+        box-shadow:0 4px 15px rgba(99,102,241,.3);
+      }
+      .btn-login:hover{box-shadow:0 6px 20px rgba(99,102,241,.4);transform:translateY(-1px)}
+      .btn-clear{
+        border:1px solid rgba(255,255,255,.25);
+        background:transparent;color:rgba(255,255,255,.9);
+      }
+      .btn-clear:hover{background:rgba(255,255,255,.1)}
+      .actions{display:flex;gap:.7rem;margin-top:.5rem}
+      .msg{
+        margin-top:1rem;font-size:.9rem;text-align:center;
+        color:#fca5a5;
+      }
+      .footer{
+        margin-top:1.5rem;font-size:.75rem;
+        color:rgba(255,255,255,.55);text-align:center;
+      }
+      .halo{
+        position:absolute;inset:0;border-radius:inherit;
+        background:radial-gradient(circle at 50% 100%,rgba(255,255,255,.12),transparent 70%);
+        filter:blur(40px);z-index:-1;
+      }
     `;
 
     globalThis._baseLoginHTML = `<!doctype html>
@@ -129,34 +186,35 @@ async function loginPage(message = "") {
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>安全登录</title>
-  <style>${criticalCSS}</style>
+  <style>${css}</style>
 </head>
 <body>
-  <div class="login-box">
-    <h1 style="font-size:1.2rem;font-weight:600;margin-bottom:.5rem">🔐 安全访问面板</h1>
-    <p style="color:rgba(255,255,255,.8);font-size:.9rem;margin-bottom:1.2rem">请输入访问密码以进入 Cloudflare 仪表盘。</p>
+  <div class="card">
+    <div class="halo"></div>
+    <h1>🔐 安全访问面板</h1>
+    <p class="desc">请输入访问密码以进入 Cloudflare 仪表盘。</p>
 
     <form method="POST" action="/login" autocomplete="off">
-      <input type="password" name="password" required placeholder="输入访问密码" aria-label="密码"/>
-      <div style="margin-top:.8rem">
-        <button type="submit" class="btn btn-primary">登录</button>
-        <button type="button" class="btn btn-clear" onclick="document.querySelector('input[name=password]').value='';document.querySelector('input[name=password]').focus();">清除</button>
+      <input type="password" name="password" placeholder="输入访问密码" required />
+      <div class="actions">
+        <button type="submit" class="btn btn-login">登录</button>
+        <button type="button" class="btn btn-clear"
+          onclick="document.querySelector('input[name=password]').value='';document.querySelector('input[name=password]').focus();">
+          清除
+        </button>
       </div>
-
       <!--MSG_PLACEHOLDER-->
     </form>
-    <small>Cloudflare Workers • 受保护访问</small>
+
+    <div class="footer">Cloudflare Workers • 受保护访问</div>
   </div>
 </body>
 </html>`;
   }
 
-  // 动态插入消息（保持原逻辑）
   return globalThis._baseLoginHTML.replace(
     "<!--MSG_PLACEHOLDER-->",
-    message
-      ? `<p style="margin-top:1rem;color:#f87171;font-size:.9rem;">${message}</p>`
-      : ""
+    message ? `<div class="msg">${message}</div>` : ""
   );
 }
 
