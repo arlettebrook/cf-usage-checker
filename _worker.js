@@ -95,119 +95,102 @@ export default {
 };
 
 
-// ======= 登录页（极简现代风格，无清除按钮） =======
+// ======= Cloudflare 仪表盘风格 登录页 =======
 async function loginPage(message = "") {
   if (!globalThis._baseLoginHTML) {
     const css = `
       * { box-sizing: border-box; margin: 0; padding: 0; }
       body {
-        font-family: "Inter", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial;
+        font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
         display: flex; align-items: center; justify-content: center;
         min-height: 100vh; padding: 1.5rem;
-        background: linear-gradient(135deg, #1e3a8a, #4f46e5, #9333ea);
-        background-size: 250% 250%;
-        animation: gradientMove 18s ease-in-out infinite;
-        color: #e5e7eb;
-      }
-      @keyframes gradientMove {
-        0% { background-position: 0% 50%; }
-        50% { background-position: 100% 50%; }
-        100% { background-position: 0% 50%; }
+        background: radial-gradient(circle at 25% 25%, #1e1e2f 0%, #0d0d1b 80%);
+        color: #cbd5f7;
       }
 
       .card {
-        width: 100%; max-width: 22rem; padding: 2.6rem 2rem;
-        background: rgba(255,255,255,.08);
-        border: 1px solid rgba(255,255,255,.15);
-        border-radius: 1.5rem;
-        backdrop-filter: blur(18px) saturate(180%);
-        box-shadow: 0 10px 40px rgba(0,0,0,.3);
+        width: 100%; max-width: 22rem; padding: 2.5rem 2rem;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 1.25rem;
+        backdrop-filter: blur(20px);
+        box-shadow: 0 0 25px rgba(0,0,0,0.4), inset 0 0 12px rgba(255,255,255,0.02);
         text-align: center;
-        transition: all .35s ease;
+        transition: all .3s ease;
       }
       .card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 18px 55px rgba(0,0,0,.4);
+        transform: translateY(-2px);
+        box-shadow: 0 0 35px rgba(99,102,241,0.25);
       }
 
       h1 {
-        font-size: 1.4rem; font-weight: 700;
-        margin-bottom: .6rem;
+        font-size: 1.35rem;
+        font-weight: 700;
+        margin-bottom: .75rem;
         background: linear-gradient(90deg, #60a5fa, #a78bfa);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
-        letter-spacing: 0.3px;
       }
 
       p.desc {
-        font-size: .93rem;
-        color: rgba(255,255,255,.75);
+        font-size: .9rem;
+        color: #a5b4fc;
         margin-bottom: 1.8rem;
-        line-height: 1.5;
       }
 
-      form { display: flex; flex-direction: column; gap: 1rem; }
+      form {
+        display: flex;
+        flex-direction: column;
+        gap: 1.1rem;
+      }
 
       input {
-        padding: .85rem 1rem;
-        border: none; border-radius: .75rem;
-        background: rgba(255,255,255,.12);
-        color: #f9fafb;
-        font-size: .95rem;
+        padding: .9rem 1rem;
+        border-radius: .75rem;
+        border: 1px solid rgba(255,255,255,0.08);
+        background: rgba(255,255,255,0.05);
+        color: #f1f5f9;
         text-align: center;
-        outline: none;
+        font-size: .95rem;
         transition: all .25s ease;
-        box-shadow: inset 0 0 0 1px rgba(255,255,255,.2);
       }
-
       input::placeholder {
-        color: rgba(255,255,255,.55);
+        color: rgba(255,255,255,0.35);
       }
-
       input:focus {
-        background: rgba(255,255,255,.2);
-        box-shadow: 0 0 0 2px rgba(96,165,250,.6), inset 0 0 0 1px rgba(255,255,255,.25);
-        transform: translateY(-1px);
+        background: rgba(255,255,255,0.1);
+        border-color: rgba(99,102,241,0.5);
+        box-shadow: 0 0 0 2px rgba(99,102,241,0.35);
+        outline: none;
       }
 
       button {
         border: none;
         border-radius: 9999px;
-        padding: .8rem 1rem;
+        padding: .85rem 1rem;
         background: linear-gradient(90deg, #3b82f6, #8b5cf6);
-        color: white;
+        color: #fff;
         font-weight: 600;
         font-size: .95rem;
         cursor: pointer;
-        box-shadow: 0 4px 15px rgba(99,102,241,.3);
         transition: all .25s ease;
+        box-shadow: 0 0 12px rgba(99,102,241,0.3);
       }
-
       button:hover {
         transform: translateY(-1px);
-        box-shadow: 0 6px 20px rgba(99,102,241,.4);
+        box-shadow: 0 0 18px rgba(99,102,241,0.45);
       }
 
       .msg {
         margin-top: 1rem;
-        font-size: .9rem;
-        color: #fca5a5;
-        text-shadow: 0 1px 2px rgba(0,0,0,.25);
+        font-size: .88rem;
+        color: #f87171;
       }
 
       .footer {
-        margin-top: 1.8rem;
+        margin-top: 2rem;
         font-size: .75rem;
-        color: rgba(255,255,255,.55);
-      }
-
-      .halo {
-        position: absolute;
-        inset: 0;
-        border-radius: inherit;
-        background: radial-gradient(circle at 50% 120%, rgba(255,255,255,.15), transparent 70%);
-        filter: blur(45px);
-        z-index: -1;
+        color: rgba(148,163,184,0.65);
       }
     `;
 
@@ -216,14 +199,13 @@ async function loginPage(message = "") {
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>安全登录</title>
+  <title>安全登录 - Cloudflare 仪表盘</title>
   <style>${css}</style>
 </head>
 <body>
   <div class="card">
-    <div class="halo"></div>
-    <h1>🔐 安全访问</h1>
-    <p class="desc">请输入访问密码以进入 Cloudflare 仪表盘。</p>
+    <h1>🌥️ Cloudflare Access</h1>
+    <p class="desc">请输入访问密码以进入仪表盘</p>
 
     <form method="POST" action="/login" autocomplete="off">
       <input type="password" name="password" placeholder="输入访问密码" required />
@@ -231,7 +213,7 @@ async function loginPage(message = "") {
       <!--MSG_PLACEHOLDER-->
     </form>
 
-    <div class="footer">Cloudflare Workers • 安全保护</div>
+    <div class="footer">© Cloudflare Workers Dashboard</div>
   </div>
 </body>
 </html>`;
@@ -251,7 +233,7 @@ function loginSuccess(hash) {
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>登录成功</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
   </head>
   <body class="h-screen flex items-center justify-center bg-gradient-to-tr from-indigo-500 via-purple-500 to-sky-400 text-white font-sans">
     <div class="p-8 rounded-3xl bg-white/15 backdrop-blur-lg shadow-2xl text-center animate-fade-in">
