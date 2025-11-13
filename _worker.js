@@ -95,7 +95,7 @@ export default {
 };
 
 
-// ======= 登录页（性能优化版，UI/功能不变） =======
+// ======= 登录页（全新配色优化 + 高级玻璃拟态风格） =======
 async function loginPage(message = "") {
   if (!globalThis._baseLoginHTML) {
     const css = `
@@ -104,10 +104,10 @@ async function loginPage(message = "") {
         font-family:"Inter","Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial;
         display:flex;align-items:center;justify-content:center;
         min-height:100vh;padding:1.5rem;
-        background:linear-gradient(135deg,#0ea5e9,#6366f1,#8b5cf6);
-        background-size:250% 250%;
-        animation:gradient 18s ease infinite;
-        color:#fff;
+        background:linear-gradient(135deg,#90cdf4,#a78bfa,#312e81);
+        background-size:220% 220%;
+        animation:gradient 20s ease infinite;
+        color:#e9ecf5;
       }
       @keyframes gradient{
         0%{background-position:0% 50%}
@@ -117,66 +117,69 @@ async function loginPage(message = "") {
       .card{
         position:relative;
         width:100%;max-width:22rem;
-        padding:2.5rem 2rem;
+        padding:2.6rem 2rem;
         background:rgba(255,255,255,.1);
-        border:1px solid rgba(255,255,255,.2);
-        border-radius:1.25rem;
-        backdrop-filter:blur(16px);
-        box-shadow:0 15px 50px rgba(0,0,0,.35);
+        border:1px solid rgba(255,255,255,.18);
+        border-radius:1.4rem;
+        backdrop-filter:blur(20px) saturate(150%);
+        box-shadow:0 10px 50px rgba(0,0,0,.35);
         transition:all .3s ease;
       }
       .card:hover{
-        transform:translateY(-2px);
+        transform:translateY(-3px);
         box-shadow:0 20px 60px rgba(0,0,0,.45);
       }
       h1{
-        font-size:1.3rem;font-weight:600;margin-bottom:.4rem;
-        background:linear-gradient(90deg,#38bdf8,#a855f7);
+        font-size:1.4rem;font-weight:700;margin-bottom:.6rem;
+        background:linear-gradient(90deg,#38bdf8,#a78bfa);
         -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+        letter-spacing:0.3px;
       }
       p.desc{
-        font-size:.9rem;color:rgba(255,255,255,.75);margin-bottom:1.5rem;
+        font-size:.92rem;color:rgba(240,240,255,.85);margin-bottom:1.6rem;line-height:1.5;
       }
-      form{display:flex;flex-direction:column;gap:.8rem}
+      form{display:flex;flex-direction:column;gap:.9rem}
       input{
-        padding:.75rem 1rem;text-align:center;border:none;border-radius:.75rem;
-        background:rgba(255,255,255,.08);color:#fff;font-size:.95rem;
-        outline:none;transition:all .2s ease;
+        padding:.8rem 1rem;text-align:center;border:none;border-radius:.8rem;
+        background:rgba(255,255,255,.08);color:#f1f5f9;font-size:.95rem;
+        outline:none;transition:all .25s ease;
+        box-shadow:inset 0 0 0 1px rgba(255,255,255,.2);
       }
       input::placeholder{color:rgba(255,255,255,.55)}
       input:focus{
         background:rgba(255,255,255,.15);
-        box-shadow:0 0 0 2px rgba(56,189,248,.5);
+        box-shadow:0 0 0 2px rgba(56,189,248,.6),inset 0 0 0 1px rgba(255,255,255,.3);
         transform:translateY(-1px);
       }
       .btn{
         border:none;cursor:pointer;border-radius:9999px;
-        font-weight:600;color:#fff;padding:.65rem 1rem;
+        font-weight:600;color:#fff;padding:.7rem 1rem;
         transition:all .25s ease;font-size:.95rem;
       }
       .btn-login{
-        background:linear-gradient(90deg,#38bdf8,#6366f1,#8b5cf6);
-        box-shadow:0 4px 15px rgba(99,102,241,.3);
+        background:linear-gradient(90deg,#60a5fa,#8b5cf6);
+        box-shadow:0 4px 15px rgba(99,102,241,.35);
       }
-      .btn-login:hover{box-shadow:0 6px 20px rgba(99,102,241,.4);transform:translateY(-1px)}
+      .btn-login:hover{box-shadow:0 6px 22px rgba(99,102,241,.45);transform:translateY(-1px)}
       .btn-clear{
         border:1px solid rgba(255,255,255,.25);
-        background:transparent;color:rgba(255,255,255,.9);
+        background:rgba(255,255,255,.05);
+        color:rgba(255,255,255,.9);
       }
-      .btn-clear:hover{background:rgba(255,255,255,.1)}
+      .btn-clear:hover{background:rgba(255,255,255,.12)}
       .actions{display:flex;gap:.7rem;margin-top:.5rem}
       .msg{
         margin-top:1rem;font-size:.9rem;text-align:center;
-        color:#fca5a5;
+        color:#fca5a5;text-shadow:0 1px 2px rgba(0,0,0,.2);
       }
       .footer{
-        margin-top:1.5rem;font-size:.75rem;
+        margin-top:1.8rem;font-size:.75rem;
         color:rgba(255,255,255,.55);text-align:center;
       }
       .halo{
         position:absolute;inset:0;border-radius:inherit;
-        background:radial-gradient(circle at 50% 100%,rgba(255,255,255,.12),transparent 70%);
-        filter:blur(40px);z-index:-1;
+        background:radial-gradient(circle at 50% 110%,rgba(255,255,255,.18),transparent 70%);
+        filter:blur(45px);z-index:-1;
       }
     `;
 
