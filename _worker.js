@@ -95,121 +95,143 @@ export default {
 };
 
 
-// ======= 登录页（全新配色优化 + 高级玻璃拟态风格） =======
+// ======= 登录页（极简现代风格，无清除按钮） =======
 async function loginPage(message = "") {
   if (!globalThis._baseLoginHTML) {
     const css = `
-      *{box-sizing:border-box;margin:0;padding:0}
-      body{
-        font-family:"Inter","Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial;
-        display:flex;align-items:center;justify-content:center;
-        min-height:100vh;padding:1.5rem;
-        background:linear-gradient(135deg,#90cdf4,#a78bfa,#312e81);
-        background-size:220% 220%;
-        animation:gradient 20s ease infinite;
-        color:#e9ecf5;
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body {
+        font-family: "Inter", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial;
+        display: flex; align-items: center; justify-content: center;
+        min-height: 100vh; padding: 1.5rem;
+        background: linear-gradient(135deg, #1e3a8a, #4f46e5, #9333ea);
+        background-size: 250% 250%;
+        animation: gradientMove 18s ease-in-out infinite;
+        color: #e5e7eb;
       }
-      @keyframes gradient{
-        0%{background-position:0% 50%}
-        50%{background-position:100% 50%}
-        100%{background-position:0% 50%}
+      @keyframes gradientMove {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
       }
-      .card{
-        position:relative;
-        width:100%;max-width:22rem;
-        padding:2.6rem 2rem;
-        background:rgba(255,255,255,.1);
-        border:1px solid rgba(255,255,255,.18);
-        border-radius:1.4rem;
-        backdrop-filter:blur(20px) saturate(150%);
-        box-shadow:0 10px 50px rgba(0,0,0,.35);
-        transition:all .3s ease;
+
+      .card {
+        width: 100%; max-width: 22rem; padding: 2.6rem 2rem;
+        background: rgba(255,255,255,.08);
+        border: 1px solid rgba(255,255,255,.15);
+        border-radius: 1.5rem;
+        backdrop-filter: blur(18px) saturate(180%);
+        box-shadow: 0 10px 40px rgba(0,0,0,.3);
+        text-align: center;
+        transition: all .35s ease;
       }
-      .card:hover{
-        transform:translateY(-3px);
-        box-shadow:0 20px 60px rgba(0,0,0,.45);
+      .card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 18px 55px rgba(0,0,0,.4);
       }
-      h1{
-        font-size:1.4rem;font-weight:700;margin-bottom:.6rem;
-        background:linear-gradient(90deg,#38bdf8,#a78bfa);
-        -webkit-background-clip:text;-webkit-text-fill-color:transparent;
-        letter-spacing:0.3px;
+
+      h1 {
+        font-size: 1.4rem; font-weight: 700;
+        margin-bottom: .6rem;
+        background: linear-gradient(90deg, #60a5fa, #a78bfa);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        letter-spacing: 0.3px;
       }
-      p.desc{
-        font-size:.92rem;color:rgba(240,240,255,.85);margin-bottom:1.6rem;line-height:1.5;
+
+      p.desc {
+        font-size: .93rem;
+        color: rgba(255,255,255,.75);
+        margin-bottom: 1.8rem;
+        line-height: 1.5;
       }
-      form{display:flex;flex-direction:column;gap:.9rem}
-      input{
-        padding:.8rem 1rem;text-align:center;border:none;border-radius:.8rem;
-        background:rgba(255,255,255,.08);color:#f1f5f9;font-size:.95rem;
-        outline:none;transition:all .25s ease;
-        box-shadow:inset 0 0 0 1px rgba(255,255,255,.2);
+
+      form { display: flex; flex-direction: column; gap: 1rem; }
+
+      input {
+        padding: .85rem 1rem;
+        border: none; border-radius: .75rem;
+        background: rgba(255,255,255,.12);
+        color: #f9fafb;
+        font-size: .95rem;
+        text-align: center;
+        outline: none;
+        transition: all .25s ease;
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,.2);
       }
-      input::placeholder{color:rgba(255,255,255,.55)}
-      input:focus{
-        background:rgba(255,255,255,.15);
-        box-shadow:0 0 0 2px rgba(56,189,248,.6),inset 0 0 0 1px rgba(255,255,255,.3);
-        transform:translateY(-1px);
+
+      input::placeholder {
+        color: rgba(255,255,255,.55);
       }
-      .btn{
-        border:none;cursor:pointer;border-radius:9999px;
-        font-weight:600;color:#fff;padding:.7rem 1rem;
-        transition:all .25s ease;font-size:.95rem;
+
+      input:focus {
+        background: rgba(255,255,255,.2);
+        box-shadow: 0 0 0 2px rgba(96,165,250,.6), inset 0 0 0 1px rgba(255,255,255,.25);
+        transform: translateY(-1px);
       }
-      .btn-login{
-        background:linear-gradient(90deg,#60a5fa,#8b5cf6);
-        box-shadow:0 4px 15px rgba(99,102,241,.35);
+
+      button {
+        border: none;
+        border-radius: 9999px;
+        padding: .8rem 1rem;
+        background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+        color: white;
+        font-weight: 600;
+        font-size: .95rem;
+        cursor: pointer;
+        box-shadow: 0 4px 15px rgba(99,102,241,.3);
+        transition: all .25s ease;
       }
-      .btn-login:hover{box-shadow:0 6px 22px rgba(99,102,241,.45);transform:translateY(-1px)}
-      .btn-clear{
-        border:1px solid rgba(255,255,255,.25);
-        background:rgba(255,255,255,.05);
-        color:rgba(255,255,255,.9);
+
+      button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 20px rgba(99,102,241,.4);
       }
-      .btn-clear:hover{background:rgba(255,255,255,.12)}
-      .actions{display:flex;gap:.7rem;margin-top:.5rem}
-      .msg{
-        margin-top:1rem;font-size:.9rem;text-align:center;
-        color:#fca5a5;text-shadow:0 1px 2px rgba(0,0,0,.2);
+
+      .msg {
+        margin-top: 1rem;
+        font-size: .9rem;
+        color: #fca5a5;
+        text-shadow: 0 1px 2px rgba(0,0,0,.25);
       }
-      .footer{
-        margin-top:1.8rem;font-size:.75rem;
-        color:rgba(255,255,255,.55);text-align:center;
+
+      .footer {
+        margin-top: 1.8rem;
+        font-size: .75rem;
+        color: rgba(255,255,255,.55);
       }
-      .halo{
-        position:absolute;inset:0;border-radius:inherit;
-        background:radial-gradient(circle at 50% 110%,rgba(255,255,255,.18),transparent 70%);
-        filter:blur(45px);z-index:-1;
+
+      .halo {
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        background: radial-gradient(circle at 50% 120%, rgba(255,255,255,.15), transparent 70%);
+        filter: blur(45px);
+        z-index: -1;
       }
     `;
 
     globalThis._baseLoginHTML = `<!doctype html>
 <html lang="zh-CN">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>安全登录</title>
   <style>${css}</style>
 </head>
 <body>
   <div class="card">
     <div class="halo"></div>
-    <h1>🔐 安全访问面板</h1>
+    <h1>🔐 安全访问</h1>
     <p class="desc">请输入访问密码以进入 Cloudflare 仪表盘。</p>
 
     <form method="POST" action="/login" autocomplete="off">
       <input type="password" name="password" placeholder="输入访问密码" required />
-      <div class="actions">
-        <button type="submit" class="btn btn-login">登录</button>
-        <button type="button" class="btn btn-clear"
-          onclick="document.querySelector('input[name=password]').value='';document.querySelector('input[name=password]').focus();">
-          清除
-        </button>
-      </div>
+      <button type="submit">登录</button>
       <!--MSG_PLACEHOLDER-->
     </form>
 
-    <div class="footer">Cloudflare Workers • 受保护访问</div>
+    <div class="footer">Cloudflare Workers • 安全保护</div>
   </div>
 </body>
 </html>`;
