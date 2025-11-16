@@ -385,323 +385,223 @@ accounts.sort((a, b) => (b.total || 0) - (a.total || 0));
   return `<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🌤️ Cloudflare Workers & Pages Usage Dashboard</title>
-  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-  <style>
-    :root {
-      --bg-light: linear-gradient(135deg, #f9fafb, #eff6ff, #ecfdf5);
-      --card-light: rgba(255, 255, 255, 0.8);
-      --text-light: #1e293b;
-      --accent-light: #2563eb;
-      --border-light: rgba(0, 0, 0, 0.08);
-      --progress-light: linear-gradient(90deg, #10b981, #3b82f6, #8b5cf6);
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>🌤️ Cloudflare Workers & Pages Usage Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+<style>
+:root {
+  --bg-light: linear-gradient(135deg, #f9fafb, #eff6ff, #ecfdf5);
+  --card-light: rgba(255, 255, 255, 0.85);
+  --text-light: #1e293b;
+  --accent-light: #2563eb;
+  --border-light: rgba(0,0,0,0.08);
+  --progress-light: linear-gradient(90deg, #10b981, #3b82f6, #8b5cf6);
 
-      --bg-dark: radial-gradient(circle at top left, #0f172a, #1e293b, #111827);
-      --card-dark: rgba(30, 41, 59, 0.8);
-      --text-dark: #f1f5f9;
-      --accent-dark: #60a5fa;
-      --border-dark: rgba(255, 255, 255, 0.08);
-      --progress-dark: linear-gradient(90deg, #38bdf8, #818cf8, #c084fc);
+  --bg-dark: radial-gradient(circle at top left, #0f172a, #1e293b, #111827);
+  --card-dark: rgba(30,41,59,0.85);
+  --text-dark: #f1f5f9;
+  --accent-dark: #60a5fa;
+  --border-dark: rgba(255,255,255,0.08);
+  --progress-dark: linear-gradient(90deg, #38bdf8, #818cf8, #c084fc);
 
-      --radius: 1.25rem;
-    }
+  --radius: 1.25rem;
+}
+body {
+  background: var(--bg-light);
+  color: var(--text-light);
+  font-family: 'Inter', 'Segoe UI', sans-serif;
+  transition: background 0.4s, color 0.4s;
+  min-height: 100vh;
+  background-attachment: fixed;
+}
+html.dark body {
+  background: var(--bg-dark);
+  color: var(--text-dark);
+}
 
-    body {
-      background: var(--bg-light);
-      color: var(--text-light);
-      font-family: 'Inter', 'Segoe UI', sans-serif;
-      transition: all 0.4s ease-in-out;
-      min-height: 100vh;
-      background-attachment: fixed;
-    }
-    html.dark body {
-      background: var(--bg-dark);
-      color: var(--text-dark);
-    }
+/* ===== Navbar ===== */
+.navbar {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(90deg, #6366f1, #3b82f6, #06b6d4);
+  padding: 1rem 1.5rem;
+  border-radius: var(--radius);
+  color: white;
+  box-shadow: 0 10px 30px rgba(99,102,241,0.25);
+  backdrop-filter: blur(12px);
+  margin-bottom: 2rem;
+  position: sticky;
+  top: 1rem;
+  z-index: 50;
+}
+.navbar h1 {
+  font-weight: 700;
+  font-size: clamp(1.2rem, 4vw, 1.75rem);
+  flex: 1 1 100%;
+  margin-bottom: 0.75rem;
+  text-shadow: 0 2px 10px rgba(255,255,255,0.35);
+  text-align: center;
+}
+@media (min-width: 640px) {
+  .navbar h1 { flex: 0 1 auto; margin-bottom:0; text-align:left; }
+}
+.nav-btn { display: flex; gap: 0.75rem; justify-content:center; }
+.nav-btn button {
+  background: rgba(255,255,255,0.25);
+  padding: 0.6rem 1.2rem;
+  border-radius: 9999px;
+  border: none;
+  color: white;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  transition: background 0.3s, transform 0.3s, box-shadow 0.3s;
+}
+.nav-btn button:hover {
+  background: rgba(255,255,255,0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(255,255,255,0.25);
+}
 
-    .navbar {
-      width: 100%;
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
-      align-items: center;
-      background: linear-gradient(90deg, #6366f1, #3b82f6, #06b6d4);
-      padding: 1rem 1.5rem;
-      border-radius: var(--radius);
-      color: white;
-      box-shadow: 0 10px 30px rgba(99,102,241,0.25);
-      backdrop-filter: blur(16px);
-      margin-bottom: 2rem;
-      position: sticky;
-      top: 1rem;
-      z-index: 50;
-    }
+/* ===== Card ===== */
+.card {
+  background: var(--card-light);
+  border-radius: var(--radius);
+  padding: 1.75rem;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+  border: 1px solid var(--border-light);
+  transition: transform 0.4s, box-shadow 0.4s;
+  backdrop-filter: blur(10px);
+  position: relative;
+  overflow: hidden;
+}
+html.dark .card {
+  background: var(--card-dark);
+  border: 1px solid var(--border-dark);
+  box-shadow: 0 12px 30px rgba(0,0,0,0.4);
+}
+.card:hover {
+  transform: translateY(-5px) scale(1.02);
+  box-shadow: 0 20px 40px rgba(99,102,241,0.25);
+}
+.card::before {
+  content:"";
+  position:absolute; top:-40%; left:-40%;
+  width:180%; height:180%;
+  background: radial-gradient(circle at top left, rgba(99,102,241,0.15), transparent 70%);
+  transform:rotate(25deg);
+  z-index:0;
+}
+.card h2 { font-size:1.35rem; font-weight:700; margin-bottom:1rem; color:var(--accent-light); position:relative; z-index:1; }
+html.dark .card h2 { color: var(--accent-dark); }
+.card .content { position:relative; z-index:1; font-size:1rem; line-height:1.7; }
+.card p { display:flex; justify-content:space-between; margin:0.25rem 0; }
+.num { font-weight:700; font-size:1.05rem; }
 
-    .navbar h1 {
-      font-weight: 700;
-      font-size: clamp(1.2rem, 4vw, 1.75rem);
-      text-align: center;
-      text-shadow: 0 2px 10px rgba(255,255,255,0.35);
-      flex: 1 1 100%;
-      margin-bottom: 0.75rem;
-    }
-    @media (min-width: 640px) {
-      .navbar h1 {
-        flex: 0 1 auto;
-        margin-bottom: 0;
-        text-align: left;
-      }
-    }
+/* ===== Progress ===== */
+.progress-bar { width:100%; height:0.75rem; background-color: rgba(0,0,0,0.1); border-radius:9999px; overflow:hidden; margin-top:0.8rem; }
+html.dark .progress-bar { background-color: rgba(255,255,255,0.1); }
+.progress { height:100%; border-radius:9999px; transition: width 1s ease-in-out; box-shadow:0 0 10px rgba(59,130,246,0.4); background: var(--progress-light); }
+html.dark .progress { background: var(--progress-dark); box-shadow:0 0 10px rgba(129,140,248,0.3); }
+.progress-text { font-size:0.85rem; margin-top:0.4rem; text-align:right; opacity:0.75; }
 
-    .nav-btn {
-      display: flex;
-      gap: 0.75rem;
-      justify-content: center;
-    }
+/* ===== Footer ===== */
+footer { margin-top:3rem; text-align:center; opacity:0.85; font-size:0.9rem; }
+footer a { background: linear-gradient(90deg, #6366f1, #10b981); -webkit-background-clip:text; -webkit-text-fill-color:transparent; font-weight:600; text-decoration:none; }
+footer a:hover { filter: brightness(1.3); }
 
-    .nav-btn button {
-      background: rgba(255,255,255,0.25);
-      padding: 0.6rem 1.2rem;
-      border-radius: 9999px;
-      border: none;
-      color: white;
-      font-weight: 500;
-      letter-spacing: 0.3px;
-      cursor: pointer;
-      backdrop-filter: blur(6px);
-      transition: all 0.3s ease;
-    }
-
-    .nav-btn button:hover {
-      background: rgba(255,255,255,0.4);
-      transform: translateY(-2px);
-      box-shadow: 0 4px 10px rgba(255,255,255,0.25);
-    }
-
-    .card {
-      background: var(--card-light);
-      border-radius: var(--radius);
-      padding: 1.75rem;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.08);
-      border: 1px solid var(--border-light);
-      transition: all 0.4s ease;
-      backdrop-filter: blur(10px);
-      text-align: left;
-      position: relative;
-      overflow: hidden;
-    }
-    html.dark .card {
-      background: var(--card-dark);
-      border: 1px solid var(--border-dark);
-      box-shadow: 0 12px 30px rgba(0,0,0,0.4);
-    }
-    .card:hover {
-      transform: translateY(-5px) scale(1.02);
-      box-shadow: 0 20px 40px rgba(99,102,241,0.25);
-    }
-    .card::before {
-      content: "";
-      position: absolute;
-      top: -40%;
-      left: -40%;
-      width: 180%;
-      height: 180%;
-      background: radial-gradient(circle at top left, rgba(99,102,241,0.15), transparent 70%);
-      transform: rotate(25deg);
-      z-index: 0;
-    }
-    .card h2 {
-      font-size: 1.35rem;
-      font-weight: 700;
-      margin-bottom: 1rem;
-      color: var(--accent-light);
-      position: relative;
-      z-index: 1;
-    }
-    html.dark .card h2 {
-      color: var(--accent-dark);
-    }
-
-    .card .content {
-      position: relative;
-      z-index: 1;
-      font-size: 1rem;
-      line-height: 1.7;
-      color: inherit;
-    }
-    .card p {
-      display: flex;
-      justify-content: space-between;
-      margin: 0.25rem 0;
-    }
-    .num {
-      font-weight: 700;
-      font-size: 1.05rem;
-      color: inherit;
-    }
-
-    .progress-bar {
-      width: 100%;
-      height: 0.75rem;
-      background-color: rgba(0,0,0,0.1);
-      border-radius: 9999px;
-      overflow: hidden;
-      margin-top: 0.8rem;
-      position: relative;
-    }
-    html.dark .progress-bar {
-      background-color: rgba(255,255,255,0.1);
-    }
-    .progress {
-      height: 100%;
-      background: var(--progress-light);
-      border-radius: 9999px;
-      transition: width 1s ease-in-out;
-      box-shadow: 0 0 10px rgba(59,130,246,0.4);
-    }
-    html.dark .progress {
-      background: var(--progress-dark);
-      box-shadow: 0 0 10px rgba(129,140,248,0.3);
-    }
-
-    .progress-text {
-      font-size: 0.85rem;
-      margin-top: 0.4rem;
-      text-align: right;
-      opacity: 0.75;
-    }
-
-    footer {
-      margin-top: 3rem;
-      text-align: center;
-      opacity: 0.85;
-      font-size: 0.9rem;
-    }
-    footer a {
-      background: linear-gradient(90deg, #6366f1, #10b981);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      font-weight: 600;
-      text-decoration: none;
-    }
-    footer a:hover {
-      filter: brightness(1.3);
-    }
-
-    /* ===== Loading 层 ===== */
-    #loading-screen {
-      position: fixed;
-      inset: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      background: rgba(255,255,255,0.85);
-      color: #1e293b;
-      backdrop-filter: blur(10px);
-      z-index: 9999;
-      transition: opacity 0.7s ease;
-    }
-    html.dark #loading-screen {
-      background: rgba(0,0,0,0.7);
-      color: #f1f5f9;
-    }
-    #loading-spinner {
-      width: 48px;
-      height: 48px;
-      border: 4px solid rgba(96,165,250,0.3);
-      border-top-color: #3b82f6;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-      margin-bottom: 16px;
-    }
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-  </style>
+/* ===== Loading ===== */
+#loading-screen { position:fixed; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; background:rgba(255,255,255,0.85); color:#1e293b; backdrop-filter:blur(10px); z-index:9999; transition: opacity 0.5s ease; }
+html.dark #loading-screen { background: rgba(0,0,0,0.7); color: #f1f5f9; }
+#loading-spinner { width:48px; height:48px; border:4px solid rgba(96,165,250,0.3); border-top-color:#3b82f6; border-radius:50%; animation:spin 1s linear infinite; margin-bottom:16px; }
+@keyframes spin { to { transform:rotate(360deg); } }
+</style>
 </head>
 
 <body class="flex flex-col items-center p-6 relative overflow-x-hidden">
-  <!-- Loading 层 -->
-  <div id="loading-screen">
-    <div id="loading-spinner"></div>
-    <p>正在加载数据，请稍候...</p>
+<div id="loading-screen"><div id="loading-spinner"></div><p>正在加载数据，请稍候...</p></div>
+
+<nav class="navbar">
+  <h1>🌤️ Cloudflare Workers & Pages Usage 仪表盘</h1>
+  <div class="nav-btn">
+    <button id="refresh-btn">🔄 刷新数据</button>
+    <button id="theme-toggle">🌗 切换主题</button>
   </div>
+</nav>
 
-  <nav class="navbar">
-    <h1>🌤️ Cloudflare Workers & Pages Usage 仪表盘</h1>
-    <div class="nav-btn">
-      <button id="refresh-btn">🔄 刷新数据</button>
-      <button id="theme-toggle">🌗 切换主题</button>
-    </div>
-  </nav>
+<main id="data-section" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 w-full max-w-6xl">
+  ${accounts.map(a => {
+    const used = ((a.total / ((a.total || 0) + (a.free_quota_remaining || 1))) * 100).toFixed(1);
+    return `
+    <div class="card">
+      <h2>${a.account_name}</h2>
+      <div class="content">
+        <p>📄 Pages：<span class="num" data-value="${a.pages}">0</span></p>
+        <p>⚙️ Workers：<span class="num" data-value="${a.workers}">0</span></p>
+        <p>📦 总计：<span class="num" data-value="${a.total}">0</span></p>
+        <p>🎁 免费额度剩余：<span class="num" data-value="${a.free_quota_remaining}">0</span></p>
+      </div>
+      <div class="progress-bar"><div class="progress" style="width:${used}%"></div></div>
+      <p class="progress-text">${used}% 已使用</p>
+    </div>`;
+  }).join('')}
+</main>
 
-  <main id="data-section" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 w-full max-w-6xl">
-    ${accounts.map(a => {
-      const used = ((a.total / (a.total + a.free_quota_remaining || 1)) * 100).toFixed(1);
-      return `
-      <div class="card">
-        <h2>${a.account_name}</h2>
-        <div class="content">
-          <p>📄 Pages：<span class="num" data-value="${a.pages}">0</span></p>
-          <p>⚙️ Workers：<span class="num" data-value="${a.workers}">0</span></p>
-          <p>📦 总计：<span class="num" data-value="${a.total}">0</span></p>
-          <p>🎁 免费额度剩余：<span class="num" data-value="${a.free_quota_remaining}">0</span></p>
-        </div>
-        <div class="progress-bar"><div class="progress" style="width:${used}%"></div></div>
-        <p class="progress-text">${used}% 已使用</p>
-      </div>`;
-    }).join('')}
-  </main>
+<footer>©2025 Cloudflare Worker Dashboard • Designed with 💜 by <a href="https://github.com/arlettebrook" target="_blank">Arlettebrook</a></footer>
 
-  <footer>©2025 Cloudflare Worker Dashboard • Designed with 💜 by <a href="https://github.com/arlettebrook" target="_blank">Arlettebrook</a></footer>
-
-  <script>
-    // 数字动画
-    function animateNumbers() {
-      document.querySelectorAll('.num').forEach(el => {
-        const target = +el.dataset.value;
-        let count = 0;
-        const step = target / 60;
-        const timer = setInterval(() => {
-          count += step;
-          if (count >= target) {
-            count = target;
-            clearInterval(timer);
-          }
-          el.textContent = Math.floor(count).toLocaleString();
-        }, 20);
-      });
-    }
-
-    // Loading 淡出
-    window.addEventListener('load', () => {
-      animateNumbers();
-      const loader = document.getElementById('loading-screen');
-      loader.style.opacity = '0';
-      setTimeout(() => loader.remove(), 700);
+<script>
+// 数字动画 - requestAnimationFrame
+function animateNumbers() {
+  const numbers = Array.from(document.querySelectorAll('.num')).map(el => ({
+    el, target: +el.dataset.value, count: 0
+  }));
+  function step() {
+    let active = false;
+    numbers.forEach(n => {
+      if (n.count < n.target) {
+        n.count += Math.max(1, n.target/60);
+        if (n.count > n.target) n.count = n.target;
+        n.el.textContent = Math.floor(n.count).toLocaleString();
+        active = true;
+      }
     });
+    if (active) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
 
-    // 刷新按钮
-    document.getElementById('refresh-btn').addEventListener('click', () => {
-      document.body.style.opacity = '0.6';
-      setTimeout(() => location.reload(), 300);
-    });
+// Loading 淡出
+window.addEventListener('load', () => {
+  animateNumbers();
+  const loader = document.getElementById('loading-screen');
+  loader.style.opacity='0';
+  loader.style.pointerEvents='none';
+  setTimeout(() => loader.remove(), 500);
+});
 
-    // 主题切换
-    const root = document.documentElement;
-    const toggle = document.getElementById('theme-toggle');
-    if (localStorage.getItem('theme') === 'dark' ||
-        (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-      root.classList.add('dark');
-    }
-    toggle.addEventListener('click', () => {
-      root.classList.toggle('dark');
-      localStorage.setItem('theme', root.classList.contains('dark') ? 'dark' : 'light');
-    });
-  </script>
+// 刷新按钮
+document.getElementById('refresh-btn').addEventListener('click', () => {
+  document.body.style.opacity='0.6';
+  setTimeout(()=>location.reload(),300);
+});
+
+// 主题切换
+const root = document.documentElement;
+const toggle = document.getElementById('theme-toggle');
+if (localStorage.getItem('theme')==='dark' ||
+    (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+  root.classList.add('dark');
+}
+toggle.addEventListener('click',()=>{
+  root.classList.toggle('dark');
+  localStorage.setItem('theme', root.classList.contains('dark')?'dark':'light');
+});
+</script>
 </body>
 </html>`;
 }
