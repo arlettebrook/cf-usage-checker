@@ -389,6 +389,7 @@ accounts.sort((a, b) => (b.total || 0) - (a.total || 0));
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>🌤️ Cloudflare Workers & Pages Usage Dashboard</title>
   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <style>
     :root {
       --bg-light: linear-gradient(135deg, #f9fafb, #eff6ff, #ecfdf5);
@@ -620,6 +621,164 @@ accounts.sort((a, b) => (b.total || 0) - (a.total || 0));
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
+    
+    /* ======================= */
+/*  Arlettebrook Floating Menu
+/* ======================= */
+/* 只作用于 Arlettebrook 命名空间，避免污染全局 */
+.Arlettebrook-container * { box-sizing: border-box; }
+
+/* Floating Button */
+.Arlettebrook-container .Arlettebrook-floating-btn{
+    position:fixed;
+    bottom:1.8rem;
+    right:1.8rem;
+    width:50px; height:50px;
+    border-radius:50%;
+    background:linear-gradient(135deg,#6f83ff,#8f69ff);
+    color:white;
+    border:none;
+    cursor:pointer;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    font-size:1.3rem;
+    box-shadow:0 8px 22px rgba(110,90,255,0.38);
+    z-index:1200;
+    overflow:hidden;
+    will-change:transform;
+    transition: transform .25s ease, box-shadow .25s ease, opacity .25s ease;
+}
+
+/* ensure icon inside will not be overridden by other global icon rules */
+.Arlettebrook-container .Arlettebrook-floating-btn i {
+    font-size: 1.15rem;
+    line-height: 1;
+    transition: transform .28s cubic-bezier(.2,.9,.3,1), opacity .2s;
+    pointer-events: none;
+}
+
+/* hide state */
+.Arlettebrook-container .Arlettebrook-floating-btn.hide {
+    transform:translateY(80px) scale(1);
+    opacity:0;
+    pointer-events: none;
+}
+
+/* Menu wrapper (keeps same relative position as before) */
+.Arlettebrook-container .Arlettebrook-menu{
+    position:fixed;
+    bottom:calc(1.8rem + 25px);
+    right:calc(1.8rem + 25px);
+    pointer-events:none;
+    z-index:1100;
+}
+
+/* Individual items */
+.Arlettebrook-container .Arlettebrook-menu-item{
+    position:absolute;
+    width:42px;height:42px;
+    border-radius:50%;
+    display:flex;justify-content:center;align-items:center;
+    font-size:1rem;color:white;
+    cursor:pointer;pointer-events:auto;
+    opacity:0;transform:scale(0);
+    will-change:transform,opacity;
+    transition: transform .28s cubic-bezier(.2,.9,.3,1), opacity .28s;
+}
+
+/* preserve original per-item colors */
+.Arlettebrook-container .Arlettebrook-item1{--tx:-90px;--ty:0px;background:#ff859a;}
+.Arlettebrook-container .Arlettebrook-item2{--tx:-75px;--ty:-75px;background:#a38aff;}
+.Arlettebrook-container .Arlettebrook-item3{--tx:0px;--ty:-90px;background:#63ddd1;}
+
+/* hover briefly scale toward final translate (keeps feeling) */
+.Arlettebrook-container .Arlettebrook-menu-item:hover{
+    transform:scale(1.15) translate(var(--tx),var(--ty));
+}
+
+/* ripple element inside each item */
+.Arlettebrook-container .Arlettebrook-ripple{
+    position:absolute;
+    width:120%; height:120%;
+    border-radius:50%;
+    background:rgba(255,255,255,.28);
+    transform:scale(0); opacity:0;
+    pointer-events:none;
+}
+
+/* small label (optional) — commented out; can enable later */
+/* .Arlettebrook-container .Arlettebrook-label{ position:absolute; right:60px; white-space:nowrap; padding:6px 10px; border-radius:8px; font-size:.85rem; background:rgba(0,0,0,.6); color:#fff; } */
+
+
+/* ================================
+   Arlettebrook — FULL UI RESTORE PATCH
+   （恢复你原来的 UI 外观，不改 HTML、不改 JS）
+   ================================ */
+
+/* 主按钮恢复光泽感 */
+.Arlettebrook-floating-btn {
+  background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.35), rgba(255,255,255,0.0) 60%),
+              linear-gradient(135deg,#6f83ff,#8f69ff);
+  transition: box-shadow .25s ease, transform .25s ease, opacity .25s ease;
+}
+
+/* 主按钮 hover 亮度 */
+.Arlettebrook-floating-btn:hover {
+  box-shadow: 0 10px 28px rgba(110,90,255,0.48);
+  transform: scale(1.08);
+}
+
+/* 子按钮恢复亮泽、微光背景 */
+.Arlettebrook-menu-item {
+  box-shadow: 0 4px 14px rgba(0,0,0,0.18);
+  position: absolute;
+  transition: transform .32s cubic-bezier(.2,.9,.3,1), opacity .32s;
+}
+
+.Arlettebrook-menu-item::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.32), rgba(255,255,255,0) 60%);
+  pointer-events: none;
+}
+
+/* 菜单展开时的轻微回弹 */
+.Arlettebrook-menu.open .Arlettebrook-menu-item {
+  transition: transform .5s cubic-bezier(.2,1.3,.3,1), opacity .4s;
+}
+
+/* 恢复原本的 hover 微弹 */
+.Arlettebrook-menu-item:hover {
+  transform: translate(var(--tx),var(--ty)) scale(1.18) !important;
+}
+
+/* 恢复原来的 3D 深度光线效果（非常关键） */
+.Arlettebrook-menu-item i {
+  text-shadow: 0 1px 3px rgba(0,0,0,0.25);
+}
+
+/* 恢复打开叉按钮的线条粗度与亮度 */
+#Arlettebrook-fab-icon.fa-times {
+  transform: rotate(0deg);
+  font-size: 1.45rem !important;
+  filter: brightness(1.18);
+  text-shadow: 0 2px 8px rgba(255,255,255,0.28);
+  transition: transform .25s ease, filter .25s ease;
+}
+
+/* 关闭后恢复 */
+#Arlettebrook-fab-icon.fa-list {
+  font-size: 1.28rem !important;
+  filter: brightness(1);
+}
+
+/* 修复在深色模式下按钮过暗 */
+html.dark .Arlettebrook-floating-btn {
+  box-shadow: 0 8px 22px rgba(0,0,0,0.55);
+}
   </style>
 </head>
 
@@ -655,8 +814,28 @@ accounts.sort((a, b) => (b.total || 0) - (a.total || 0));
       </div>`;
     }).join('')}
   </main>
+  
+<!-- Arlettebrook Floating Menu -->
+<div class="Arlettebrook-container">
+  <div class="Arlettebrook-menu" id="Arlettebrook-menu">
+      <div class="Arlettebrook-menu-item Arlettebrook-item1" data-action="logout" title="登出">
+          <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
+      </div>
+      <div class="Arlettebrook-menu-item Arlettebrook-item2" data-action="settings" title="设置">
+          <i class="fas fa-cog" aria-hidden="true"></i>
+      </div>
+      <div class="Arlettebrook-menu-item Arlettebrook-item3" data-action="other" title="其他">
+          <i class="fas fa-ellipsis-h" aria-hidden="true"></i>
+      </div>
+  </div>
+
+  <button class="Arlettebrook-floating-btn" id="Arlettebrook-floatBtn" aria-label="菜单">
+    <i class="fas fa-list" id="Arlettebrook-fab-icon" aria-hidden="true"></i>
+  </button>
+</div>
 
   <footer>©2025 Cloudflare Worker Dashboard • Designed with 💜 by <a href="https://github.com/arlettebrook" target="_blank">Arlettebrook</a></footer>
+
 
   <script>
     // 数字动画
@@ -701,6 +880,172 @@ accounts.sort((a, b) => (b.total || 0) - (a.total || 0));
       root.classList.toggle('dark');
       localStorage.setItem('theme', root.classList.contains('dark') ? 'dark' : 'light');
     });
+    
+    /* ======================= */
+/*     Arlettebrook Menu
+/* ======================= */
+
+(function(){
+  const Arl_btn = document.getElementById("Arlettebrook-floatBtn");
+  const Arl_menu = document.getElementById("Arlettebrook-menu");
+  const Arl_items = [...document.querySelectorAll(".Arlettebrook-menu-item")];
+  const Arl_icon = document.getElementById("Arlettebrook-fab-icon");
+
+  // add ripple spans (same as before)
+  Arl_items.forEach(it=>{
+      const r=document.createElement("span");
+      r.className="Arlettebrook-ripple";
+      it.appendChild(r);
+  });
+
+  /* ===== WAAPI 动画 封装 (保留你原始节奏) ===== */
+  function Arl_scale(el,f,t,d){
+      return el.animate(
+          [{transform:`scale(${f})`},{transform:`scale(${t})`}],
+          {duration:d,easing:"ease-out",fill:"forwards"}
+      );
+  }
+  function Arl_tf(el,kf,d,delay=0){
+      return el.animate(kf,{duration:d,delay,easing:"cubic-bezier(0.25,1,0.5,1)",fill:"forwards"});
+  }
+  function Arl_ripple(r){
+      r.animate(
+          [{transform:"scale(0)",opacity:.5},{transform:"scale(1.5)",opacity:0}],
+          {duration:550,easing:"ease-out",fill:"forwards"}
+      );
+  }
+
+  function Arl_show(it,delay){
+      return Arl_tf(
+          it,
+          [
+              {transform:"scale(0) rotate(0deg) translate(0,0)",opacity:0},
+              {transform:`scale(1.05) rotate(360deg) translate(var(--tx),var(--ty))`,opacity:1}
+          ],
+          650,
+          delay
+      );
+  }
+  function Arl_hide(it){
+      return Arl_tf(
+          it,
+          [
+              {transform:`scale(1) rotate(360deg) translate(var(--tx),var(--ty))`,opacity:1},
+              {transform:`scale(0.92) rotate(360deg) translate(var(--tx),var(--ty))`,opacity:.85},
+              {transform:"scale(0) rotate(0deg) translate(0,0)",opacity:0}
+          ],
+          650
+      );
+  }
+
+  function Arl_fabHide(){
+      Arl_btn.animate(
+          [{transform:"translateY(0)",opacity:1},{transform:"translateY(80px)",opacity:0}],
+          {duration:350,fill:"forwards"}
+      );
+      Arl_btn.classList.add("hide");
+  }
+  function Arl_fabShow(){
+      Arl_btn.classList.remove("hide");
+      Arl_btn.animate(
+          [{transform:"translateY(80px)",opacity:0},{transform:"translateY(0)",opacity:1}],
+          {duration:350,fill:"forwards"}
+      );
+  }
+
+  function Arl_close(){
+      Arl_btn.classList.remove("open");
+      Arl_menu.classList.remove("open");
+      // swap icon back to list
+      if(Arl_icon){
+          Arl_icon.classList.remove("fa-times");
+          Arl_icon.classList.add("fa-list");
+      }
+      Arl_items.forEach(i=>Arl_hide(i));
+  }
+
+  // Toggle open/close and swap icon class (safe - no pseudo-element overrides)
+  Arl_btn.addEventListener("click", (e)=>{
+      e.stopPropagation();
+      const opening = !Arl_btn.classList.contains("open");
+
+      Arl_btn.classList.toggle("open");
+      Arl_menu.classList.toggle("open");
+      Arl_btn.classList.remove("hide");
+
+      // swap icon (FontAwesome class toggle) — safe and explicit
+      if(Arl_icon){
+          if(opening){
+              Arl_icon.classList.remove("fa-list");
+              Arl_icon.classList.add("fa-times");
+          } else {
+              Arl_icon.classList.remove("fa-times");
+              Arl_icon.classList.add("fa-list");
+          }
+      }
+
+      if(opening){
+          Arl_scale(Arl_btn,1,0.9,120).onfinish=()=>Arl_scale(Arl_btn,0.9,1.05,150);
+          Arl_items.forEach((it,i)=>Arl_show(it,i*80));
+          Arl_items.forEach((it,i)=>{
+              const r = it.querySelector(".Arlettebrook-ripple");
+              setTimeout(()=>Arl_ripple(r),i*80);
+          });
+      } else Arl_close();
+  });
+
+  // Bind semantic actions for each button, preserve original close behavior
+  Arl_items.forEach((it,i)=>{
+      it.addEventListener("click",(ev)=>{
+          ev.stopPropagation();
+          const action = it.dataset.action;
+          if(action === "logout"){
+              alert("🔓 你点击了：登出");
+              // put real logout logic here if needed
+          } else if(action === "settings"){
+              alert("⚙️ 你点击了：设置");
+          } else if(action === "other"){
+              alert("📁 你点击了：其他");
+          } else {
+              alert(`点击按钮 ${i+1}`);
+          }
+          Arl_close();
+      });
+  });
+
+  // 点击空白关闭（保留）
+  document.addEventListener("click",(e)=>{
+      if(Arl_menu.classList.contains("open")){
+          if(!Arl_menu.contains(e.target) && !Arl_btn.contains(e.target)){
+              Arl_close();
+          }
+      }
+  });
+
+  // 滚动隐藏（保留）
+  let Arl_lastY = window.scrollY;
+  let Arl_tick = false;
+  function Arl_scroll(){
+      Arl_tick = false;
+      const y = window.scrollY;
+      const down = y > Arl_lastY;
+
+      if(down){
+          if(Arl_menu.classList.contains("open")) Arl_close();
+          Arl_fabHide();
+      } else {
+          Arl_fabShow();
+      }
+
+      Arl_lastY = y;
+  }
+  window.addEventListener("scroll",()=>{
+      if(!Arl_tick){
+          requestAnimationFrame(Arl_scroll);
+          Arl_tick = true;
+      }
+  });
+})();
   </script>
 </body>
 </html>`;
