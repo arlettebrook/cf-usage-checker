@@ -930,7 +930,7 @@ html.dark .Arlettebrook-floating-btn {
           it,
           [
               {transform:"scale(0) rotate(0deg) translate(0,0)",opacity:0},
-              {transform:`scale(1.05) rotate(360deg) translate(var(--tx),var(--ty))`,opacity:1}
+              { transform: "scale(1.05) rotate(360deg) translate(var(--xx))" } translate(var(--tx),var(--ty))`,opacity:1}
           ],
           650,
           delay
