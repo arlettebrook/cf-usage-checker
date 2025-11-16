@@ -901,7 +901,7 @@ html.dark .Arlettebrook-floating-btn {
   /* ===== WAAPI 动画 封装 (保留你原始节奏) ===== */
   function Arl_scale(el,f,t,d){
       return el.animate(
-          [{transform:`scale(${f})`},{transform:`scale(${t})`}],
+          [{ transform: "scale(" + f + ")" }, { transform: "scale(" + t + ")" }],
           {duration:d,easing:"ease-out",fill:"forwards"}
       );
   }
