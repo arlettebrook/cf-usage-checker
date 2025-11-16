@@ -899,14 +899,22 @@ html.dark .Arlettebrook-floating-btn {
   });
 
   /* ===== WAAPI 动画 封装 (保留你原始节奏) ===== */
-  function Arl_scale(el,f,t,d){
-      return el.animate(
-          [
-  { transform: `scale(${f})` },
-  { transform: `scale(${t})` }
-]          {duration:d,easing:"ease-out",fill:"forwards"}
-      );
-  }
+  function Arl_scale(el, f, t, d) {
+    const from = "scale(" + f + ")";
+    const to   = "scale(" + t + ")";
+
+    return el.animate(
+        [
+            { transform: from },
+            { transform: to }
+        ],
+        {
+            duration: d,
+            easing: "ease-out",
+            fill: "forwards"
+        }
+    );
+}
   function Arl_tf(el,kf,d,delay=0){
       return el.animate(kf,{duration:d,delay,easing:"cubic-bezier(0.25,1,0.5,1)",fill:"forwards"});
   }
