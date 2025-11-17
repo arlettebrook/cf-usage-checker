@@ -881,7 +881,27 @@ const names = ["登出","管理","其他"];
 
 items.forEach((item,i)=>{
     item.addEventListener("click",()=>{
-        alert("点击：" + names[i]);
+        const action = names[i];
+
+        if (action === "登出") {
+
+            // 你的后端直接返回 HTML 页，无需 body
+            fetch("/logout", {
+                method: "POST"
+            })
+            .then(async res => {
+                // 后端会返回 loginPage() 的 HTML
+                const html = await res.text();
+                document.open();
+                document.write(html);
+                document.close();
+            })
+            .catch(() => alert("无法连接到服务器"));
+
+        } else {
+            alert("点击：" + action);
+        }
+
         closeMenu();
     });
 });
