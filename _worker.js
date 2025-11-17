@@ -389,6 +389,9 @@ accounts.sort((a, b) => (b.total || 0) - (a.total || 0));
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>🌤️ Cloudflare Workers & Pages Usage Dashboard</title>
   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
   <style>
     :root {
       --bg-light: linear-gradient(135deg, #f9fafb, #eff6ff, #ecfdf5);
@@ -620,6 +623,144 @@ accounts.sort((a, b) => (b.total || 0) - (a.total || 0));
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
+    
+    /* 图标隔离层 */
+.Arlettebrook-icon {
+    display:inline-block;
+    font-size:1em;
+    line-height:1;
+    width:1em;
+    height:1em;
+    text-rendering:auto;
+    -webkit-font-smoothing: antialiased;
+    vertical-align:middle;
+}
+.Arlettebrook-floating-btn .Arlettebrook-icon { font-size:1.3rem; }
+.Arlettebrook-menu-item .Arlettebrook-icon { font-size:1rem; }
+
+/* 主按钮 */
+.Arlettebrook-floating-btn {
+    position: fixed;
+    bottom:1.8rem;
+    right:1.8rem;
+    width:50px;
+    height:50px;
+    border-radius:50%;
+    background:linear-gradient(135deg,#6f83ff,#8f69ff);
+    color:white;
+    border:none;
+    cursor:pointer;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    box-shadow:0 8px 22px rgba(110,90,255,0.38);
+    z-index:1200;
+    transition: transform 0.35s cubic-bezier(0.22,1,0.36,1);
+    overflow:hidden;
+}
+
+/* 主按钮隐藏/显示 */
+.Arlettebrook-hide { transform: translateY(80px); }
+.Arlettebrook-show { transform: translateY(0); }
+
+/* 主按钮切换图标 */
+.Arlettebrook-floating-btn.Arlettebrook-open .Arlettebrook-icon::before {
+    content: "\f00d";
+}
+
+/* 扇形容器 */
+.Arlettebrook-menu {
+    position: fixed;
+    bottom: calc(1.8rem + 25px);
+    right: calc(1.8rem + 25px);
+    width:0;
+    height:0;
+    pointer-events:none;
+    z-index:1100;
+}
+
+/* 子按钮 */
+.Arlettebrook-menu-item {
+    position:absolute;
+    width:42px;
+    height:42px;
+    border-radius:50%;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    font-size:1rem;
+    color:white;
+    cursor:pointer;
+    pointer-events:auto;
+    transform: scale(0) rotate(0deg) translate(0,0);
+    opacity:0;
+    transition:
+        transform 0.55s cubic-bezier(0.25,0.8,0.5,1),
+        opacity 0.35s ease-in;
+    box-shadow:0 8px 22px rgba(0,0,0,0.12);
+    overflow:visible;
+}
+
+/* 新顺序 A：登出 → 管理 → 其它 */
+.Arlettebrook-item1{--Arlettebrook-tx:-90px;--Arlettebrook-ty:0;    background:#ff859a;} /* 登出 */
+.Arlettebrook-item2{--Arlettebrook-tx:-75px;--Arlettebrook-ty:-75px;background:#a38aff;} /* 管理 */
+.Arlettebrook-item3{--Arlettebrook-tx:0;    --Arlettebrook-ty:-90px;background:#63ddd1;} /* 其它 */
+
+.Arlettebrook-menu-item:hover {
+    transform: scale(1.18) translate(var(--Arlettebrook-tx),var(--Arlettebrook-ty));
+}
+
+/* 展开动画 */
+.Arlettebrook-menu.Arlettebrook-open .Arlettebrook-menu-item {
+    opacity:1;
+    transform: scale(1.05) rotate(360deg) translate(var(--Arlettebrook-tx),var(--Arlettebrook-ty));
+    animation:Arlettebrook-bounceBack 0.45s cubic-bezier(0.25,1,0.5,1) forwards;
+}
+
+@keyframes Arlettebrook-bounceBack {
+    0% { transform: scale(1.2) rotate(360deg) translate(var(--Arlettebrook-tx),var(--Arlettebrook-ty)); }
+    60%{ transform: scale(0.95) rotate(360deg) translate(var(--Arlettebrook-tx),var(--Arlettebrook-ty)); }
+    100%{ transform: scale(1.0) rotate(360deg) translate(var(--Arlettebrook-tx),var(--Arlettebrook-ty)); }
+}
+
+/* 波纹 */
+.Arlettebrook-ripple {
+    position: absolute;
+    width:120%;
+    height:120%;
+    border-radius:50%;
+    background: rgba(255,255,255,0.3);
+    transform:scale(0);
+    opacity:0;
+    pointer-events:none;
+}
+.Arlettebrook-animate { animation:Arlettebrook-rippleAnim 0.55s ease-out forwards; }
+
+@keyframes Arlettebrook-rippleAnim {
+    0%{ transform:scale(0); opacity:0.5; }
+    100%{ transform:scale(1.5); opacity:0; }
+}
+
+/* Tooltip */
+.Arlettebrook-menu-item[data-tip]::after {
+    content: attr(data-tip);
+    position:absolute;
+    right:50px;
+    padding:6px 10px;
+    background:#333;
+    color:white;
+    font-size:0.75rem;
+    border-radius:6px;
+    opacity:0;
+    transform: translateY(-50%) scale(0.8);
+    transition: opacity .25s, transform .25s;
+    pointer-events:none;
+    white-space:nowrap;
+}
+.Arlettebrook-menu-item:hover::after {
+    opacity:1;
+    transform: translateY(-50%) scale(1);
+}
   </style>
 </head>
 
@@ -655,6 +796,25 @@ accounts.sort((a, b) => (b.total || 0) - (a.total || 0));
       </div>`;
     }).join('')}
   </main>
+  
+  <!-- 菜单 -->
+<div class="Arlettebrook-menu" id="Arlettebrook-menu">
+    <div class="Arlettebrook-menu-item Arlettebrook-item1" data-tip="登出">
+        <i class="fas fa-sign-out-alt Arlettebrook-icon"></i>
+    </div>
+    <div class="Arlettebrook-menu-item Arlettebrook-item2" data-tip="管理">
+        <i class="fas fa-tools Arlettebrook-icon"></i>
+    </div>
+    <div class="Arlettebrook-menu-item Arlettebrook-item3" data-tip="其它">
+        <i class="fas fa-ellipsis-h Arlettebrook-icon"></i>
+    </div>
+</div>
+
+<!-- 主按钮 -->
+<button class="Arlettebrook-floating-btn Arlettebrook-show" id="Arlettebrook-floatBtn">
+    <i class="fas fa-bars Arlettebrook-icon"></i>
+</button>
+
 
   <footer>©2025 Cloudflare Worker Dashboard • Designed with 💜 by <a href="https://github.com/arlettebrook" target="_blank">Arlettebrook</a></footer>
 
@@ -701,6 +861,90 @@ accounts.sort((a, b) => (b.total || 0) - (a.total || 0));
       root.classList.toggle('dark');
       localStorage.setItem('theme', root.classList.contains('dark') ? 'dark' : 'light');
     });
+    
+    const floatBtn = document.getElementById("Arlettebrook-floatBtn");
+const menu = document.getElementById("Arlettebrook-menu");
+const items = [...document.querySelectorAll(".Arlettebrook-menu-item")];
+
+/* 初始化波纹 */
+items.forEach(item => {
+    const r = document.createElement("span");
+    r.className = "Arlettebrook-ripple";
+    item.appendChild(r);
+});
+
+/* 关闭菜单 */
+function closeMenu(){
+    floatBtn.classList.remove("Arlettebrook-open");
+    menu.classList.remove("Arlettebrook-open");
+}
+
+/* 主按钮点击 */
+floatBtn.addEventListener("click",()=>{
+    const open = floatBtn.classList.toggle("Arlettebrook-open");
+    menu.classList.toggle("Arlettebrook-open");
+
+    let ripple = floatBtn.querySelector(".Arlettebrook-ripple");
+    if(!ripple){
+        ripple = document.createElement("span");
+        ripple.className="Arlettebrook-ripple";
+        floatBtn.appendChild(ripple);
+    }
+    ripple.classList.remove("Arlettebrook-animate");
+    void ripple.offsetWidth;
+    ripple.classList.add("Arlettebrook-animate");
+
+    requestAnimationFrame(()=>{
+        items.forEach((item,i)=>{
+            const rp = item.querySelector(".Arlettebrook-ripple");
+            rp.classList.remove("Arlettebrook-animate");
+            void rp.offsetWidth;
+
+            setTimeout(()=> rp.classList.add("Arlettebrook-animate"), i*70);
+        });
+    });
+});
+
+/* 子按钮点击 */
+items.forEach((item,i)=>{
+    item.addEventListener("click",()=>{
+        alert("点击了：" + item.dataset.tip);
+        closeMenu();
+    });
+});
+
+/* 点击空白关闭 */
+document.addEventListener("click",(e)=>{
+    if(!menu.classList.contains("Arlettebrook-open")) return;
+    if(menu.contains(e.target) || floatBtn.contains(e.target)) return;
+    closeMenu();
+});
+
+/* 下滑自动隐藏 + 收回菜单 */
+let lastY = window.scrollY;
+let ticking = false;
+
+window.addEventListener("scroll",()=>{
+    if(!ticking){
+        requestAnimationFrame(()=>{
+            const y = window.scrollY;
+
+            if(y > lastY + 10){
+                floatBtn.classList.remove("Arlettebrook-show");
+                floatBtn.classList.add("Arlettebrook-hide");
+
+                if(menu.classList.contains("Arlettebrook-open")) closeMenu();
+            } else if(y < lastY - 10){
+                floatBtn.classList.remove("Arlettebrook-hide");
+                floatBtn.classList.add("Arlettebrook-show");
+            }
+
+            lastY = y;
+            ticking = false;
+        });
+        ticking = true;
+    }
+});
   </script>
 </body>
 </html>`;
