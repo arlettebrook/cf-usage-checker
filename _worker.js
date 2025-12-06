@@ -625,7 +625,7 @@ accounts.sort((a, b) => (b.total || 0) - (a.total || 0));
       to { transform: rotate(360deg); }
     }
 
-    /* 可选：Loading 层底部增加一条“无限循环”进度条动画（装饰用） */
+    /* Loading 层底部进度条动画（装饰用） */
     #loading-progress-bar {
       width: 160px;
       height: 6px;
@@ -763,7 +763,6 @@ accounts.sort((a, b) => (b.total || 0) - (a.total || 0));
   <div id="loading-screen">
     <div id="loading-spinner"></div>
     <p>正在加载数据，请稍候...</p>
-    <!-- 新增：Loading 进度条动画（装饰，不与实际进度绑定） -->
     <div id="loading-progress-bar">
       <div id="loading-progress-inner"></div>
     </div>
@@ -778,7 +777,6 @@ accounts.sort((a, b) => (b.total || 0) - (a.total || 0));
   </nav>
 
   <main id="data-section" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 w-full max-w-6xl">
-    <!-- 这里假设通过模板引擎渲染，把 JS 模板语法保留不变，仅给进度条增加 data-used 属性 -->
     ${accounts.map(a => {
       const used = ((a.total / (a.total + a.free_quota_remaining || 1)) * 100).toFixed(1);
       return `
@@ -791,7 +789,7 @@ accounts.sort((a, b) => (b.total || 0) - (a.total || 0));
           <p>🎁 免费额度剩余：<span class="num" data-value="${a.free_quota_remaining}">0</span></p>
         </div>
         <div class="progress-bar">
-          <!-- ★★ 关键修改：使用 data-used 存储百分比，初始 width 为 0，用 JS 做动画 ★★ -->
+          <!-- 使用 data-used 存储百分比，初始 width 为 0，用 JS 做动画 -->
           <div class="progress" data-used="${used}" style="width:0%"></div>
         </div>
         <p class="progress-text">${used}% 已使用</p>
@@ -799,7 +797,7 @@ accounts.sort((a, b) => (b.total || 0) - (a.total || 0));
     }).join('')}
   </main>
 
-  <!-- ★★ 已调整按钮顺序：登出 → 管理 → 其他 -->
+  <!-- 悬浮菜单：登出 → 管理 → 其他 -->
   <div class="Arlettebrook-menu" id="Arlettebrook-menu">
     <div class="Arlettebrook-menu-item Arlettebrook-item1">
       <i class="fas fa-sign-out-alt Arlettebrook-icon"></i>
@@ -836,34 +834,43 @@ accounts.sort((a, b) => (b.total || 0) - (a.total || 0));
       });
     }
 
-    // ★★ 新增：进度条加载动画 ★★
+    // 进度条加载动画
     function animateProgressBars() {
       const bars = document.querySelectorAll('.progress');
       bars.forEach(bar => {
         const used = parseFloat(bar.dataset.used || '0');
         // 确保初始为 0，再异步设置目标值，触发 CSS transition
         bar.style.width = '0%';
-        setTimeout(() => {
-          bar.style.width = used + '%';
-        }, 100); // 100ms 让浏览器先渲染初始状态
+        requestAnimationFrame(() => {
+          setTimeout(() => {
+            bar.style.width = used + '%';
+          }, 80);
+        });
       });
     }
 
-    // Loading 淡出
-    window.addEventListener('load', () => {
-      animateNumbers();
-      animateProgressBars(); // 调用进度条动画
-
+    function hideLoadingScreen() {
       const loader = document.getElementById('loading-screen');
+      if (!loader) return;
       loader.style.opacity = '0';
       setTimeout(() => loader.remove(), 700);
+    }
+
+    // 使用 DOMContentLoaded，避免图片等资源阻塞
+    document.addEventListener('DOMContentLoaded', () => {
+      animateNumbers();
+      animateProgressBars();
+      hideLoadingScreen();
     });
 
     // 刷新按钮
-    document.getElementById('refresh-btn').addEventListener('click', () => {
-      document.body.style.opacity = '0.6';
-      setTimeout(() => location.reload(), 300);
-    });
+    const refreshBtn = document.getElementById('refresh-btn');
+    if (refreshBtn) {
+      refreshBtn.addEventListener('click', () => {
+        document.body.style.opacity = '0.6';
+        setTimeout(() => location.reload(), 300);
+      });
+    }
 
     // 主题切换
     const root = document.documentElement;
@@ -872,125 +879,123 @@ accounts.sort((a, b) => (b.total || 0) - (a.total || 0));
         (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
       root.classList.add('dark');
     }
-    toggle.addEventListener('click', () => {
-      root.classList.toggle('dark');
-      localStorage.setItem('theme', root.classList.contains('dark') ? 'dark' : 'light');
-    });
+    if (toggle) {
+      toggle.addEventListener('click', () => {
+        root.classList.toggle('dark');
+        localStorage.setItem('theme', root.classList.contains('dark') ? 'dark' : 'light');
+      });
+    }
 
     const floatBtn = document.getElementById("Arlettebrook-floatBtn");
     const menu = document.getElementById("Arlettebrook-menu");
     const items = [...document.querySelectorAll(".Arlettebrook-menu-item")];
 
-    /* ripple init */
-    items.forEach(item=>{
-      const r=document.createElement("span");
-      r.className="Arlettebrook-ripple";
-      item.appendChild(r);
-    });
+    if (floatBtn && menu && items.length) {
+      /* ripple init */
+      items.forEach(item=>{
+        const r=document.createElement("span");
+        r.className="Arlettebrook-ripple";
+        item.appendChild(r);
+      });
 
-    /* close menu */
-    function closeMenu(){
-      floatBtn.classList.remove("Arlettebrook-open");
-      menu.classList.remove("Arlettebrook-open");
-    }
-
-    /* main toggle */
-    floatBtn.addEventListener("click",()=>{
-      floatBtn.classList.toggle("Arlettebrook-open");
-      menu.classList.toggle("Arlettebrook-open");
-
-      let ripple=floatBtn.querySelector(".Arlettebrook-ripple");
-      if(!ripple){
-        ripple=document.createElement("span");
-        ripple.className="Arlettebrook-ripple";
-        floatBtn.appendChild(ripple);
+      /* close menu */
+      function closeMenu(){
+        floatBtn.classList.remove("Arlettebrook-open");
+        menu.classList.remove("Arlettebrook-open");
       }
-      ripple.classList.remove("Arlettebrook-animate");
-      void ripple.offsetWidth;
-      ripple.classList.add("Arlettebrook-animate");
 
-      requestAnimationFrame(()=>{
-        items.forEach((item,i)=>{
-          const rp=item.querySelector(".Arlettebrook-ripple");
-          rp.classList.remove("Arlettebrook-animate");
-          void rp.offsetWidth;
-          setTimeout(()=> rp.classList.add("Arlettebrook-animate"), i*70);
+      /* main toggle */
+      floatBtn.addEventListener("click",()=>{
+        floatBtn.classList.toggle("Arlettebrook-open");
+        menu.classList.toggle("Arlettebrook-open");
+
+        let ripple=floatBtn.querySelector(".Arlettebrook-ripple");
+        if(!ripple){
+          ripple=document.createElement("span");
+          ripple.className="Arlettebrook-ripple";
+          floatBtn.appendChild(ripple);
+        }
+        ripple.classList.remove("Arlettebrook-animate");
+        void ripple.offsetWidth;
+        ripple.classList.add("Arlettebrook-animate");
+
+        requestAnimationFrame(()=>{
+          items.forEach((item,i)=>{
+            const rp=item.querySelector(".Arlettebrook-ripple");
+            if (!rp) return;
+            rp.classList.remove("Arlettebrook-animate");
+            void rp.offsetWidth;
+            setTimeout(()=> rp.classList.add("Arlettebrook-animate"), i*70);
+          });
         });
       });
-    });
 
-    /* ★★ 子按钮动作顺序已对应调整 ★★
-       原：其他 / 管理 / 登出
-       新：登出 / 管理 / 其他
-    */
-    const names = ["登出","管理","其他"];
+      /* 子按钮动作顺序：登出 / 管理 / 其他 */
+      const names = ["登出","管理","其他"];
 
-    items.forEach((item,i)=>{
-      item.addEventListener("click",()=>{
-        const action = names[i];
+      items.forEach((item,i)=>{
+        item.addEventListener("click",()=>{
+          const action = names[i];
 
-        if (action === "登出") {
-
-          // 你的后端直接返回 HTML 页，无需 body
-          fetch("/logout", {
-            method: "POST"
-          })
-          .then(async res => {
-            // 后端会返回 loginPage() 的 HTML
-            const html = await res.text();
-            document.open();
-            document.write(html);
-            document.close();
-          })
-          .catch(() => alert("无法连接到服务器"));
-
-        } else {
-          alert("点击：" + action);
-        }
-
-        closeMenu();
-      });
-    });
-
-    /* 点击空白关闭 */
-    document.addEventListener("click",(e)=>{
-      if(!menu.classList.contains("Arlettebrook-open")) return;
-      if(menu.contains(e.target)||floatBtn.contains(e.target)) return;
-      closeMenu();
-    });
-
-    /* 滑动关闭 */
-    let startY=0;
-    document.addEventListener("touchstart",e=> startY=e.touches[0].clientY);
-    document.addEventListener("touchmove",e=>{
-      if(!menu.classList.contains("Arlettebrook-open")) return;
-      if(Math.abs(e.touches[0].clientY-startY)>30) closeMenu();
-    });
-
-    /* 滚动隐藏按钮 */
-    let lastY=window.scrollY;
-    let ticking=false;
-
-    window.addEventListener("scroll",()=>{
-      if(!ticking){
-        requestAnimationFrame(()=>{
-          const y=window.scrollY;
-
-          if(y>lastY+10){
-            floatBtn.classList.remove("Arlettebrook-show");
-            floatBtn.classList.add("Arlettebrook-hide");
-            if(menu.classList.contains("Arlettebrook-open")) closeMenu();
-          }else if(y<lastY-10){
-            floatBtn.classList.remove("Arlettebrook-hide");
-            floatBtn.classList.add("Arlettebrook-show");
+          if (action === "登出") {
+            fetch("/logout", {
+              method: "POST"
+            })
+            .then(async res => {
+              const html = await res.text();
+              document.open();
+              document.write(html);
+              document.close();
+            })
+            .catch(() => alert("无法连接到服务器"));
+          } else {
+            alert("点击：" + action);
           }
 
-          lastY=y;
-          ticking=false;
+          closeMenu();
         });
-        ticking=true;
-      }
-    });
+      });
+
+      /* 点击空白关闭 */
+      document.addEventListener("click",(e)=>{
+        if(!menu.classList.contains("Arlettebrook-open")) return;
+        if(menu.contains(e.target)||floatBtn.contains(e.target)) return;
+        closeMenu();
+      });
+
+      /* 滑动关闭 */
+      let startY=0;
+      document.addEventListener("touchstart",e=> startY=e.touches[0].clientY);
+      document.addEventListener("touchmove",e=>{
+        if(!menu.classList.contains("Arlettebrook-open")) return;
+        if(Math.abs(e.touches[0].clientY-startY)>30) closeMenu();
+      });
+
+      /* 滚动隐藏按钮 */
+      let lastY=window.scrollY;
+      let ticking=false;
+
+      window.addEventListener("scroll",()=>{
+        if(!ticking){
+          requestAnimationFrame(()=>{
+            const y=window.scrollY;
+
+            if(y>lastY+10){
+              floatBtn.classList.remove("Arlettebrook-show");
+              floatBtn.classList.add("Arlettebrook-hide");
+              if(menu.classList.contains("Arlettebrook-open")) closeMenu();
+            }else if(y<lastY-10){
+              floatBtn.classList.remove("Arlettebrook-hide");
+              floatBtn.classList.add("Arlettebrook-show");
+            }
+
+            lastY=y;
+            ticking=false;
+          });
+          ticking=true;
+        }
+      });
+    }
   </script>
 </body>
 </html>`;
