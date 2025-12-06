@@ -817,34 +817,42 @@ accounts.sort((a, b) => (b.total || 0) - (a.total || 0));
   <footer>©2025 Cloudflare Worker Dashboard • Designed with 💜 by <a href="https://github.com/arlettebrook" target="_blank">Arlettebrook</a></footer>
 
   <script>
-    // 数字动画
+    // 单次 rAF 数字动画，避免多个 setInterval
     function animateNumbers() {
-      document.querySelectorAll('.num').forEach(el => {
-        const target = +el.dataset.value;
-        let count = 0;
-        const step = target / 60;
-        const timer = setInterval(() => {
-          count += step;
-          if (count >= target) {
-            count = target;
-            clearInterval(timer);
-          }
-          el.textContent = Math.floor(count).toLocaleString();
-        }, 20);
-      });
+      const elements = Array.from(document.querySelectorAll('.num'));
+      if (!elements.length) return;
+
+      const items = elements.map(el => ({
+        el,
+        target: Number(el.dataset.value) || 0
+      }));
+
+      const duration = 1200; // ms
+      const start = performance.now();
+
+      function frame(now) {
+        const progress = Math.min((now - start) / duration, 1);
+        items.forEach(({ el, target }) => {
+          const value = Math.floor(target * progress);
+          el.textContent = value.toLocaleString();
+        });
+        if (progress < 1) {
+          requestAnimationFrame(frame);
+        }
+      }
+
+      requestAnimationFrame(frame);
     }
 
     // 进度条加载动画
     function animateProgressBars() {
       const bars = document.querySelectorAll('.progress');
-      bars.forEach(bar => {
-        const used = parseFloat(bar.dataset.used || '0');
-        // 确保初始为 0，再异步设置目标值，触发 CSS transition
-        bar.style.width = '0%';
-        requestAnimationFrame(() => {
-          setTimeout(() => {
-            bar.style.width = used + '%';
-          }, 80);
+      if (!bars.length) return;
+
+      requestAnimationFrame(() => {
+        bars.forEach(bar => {
+          const used = parseFloat(bar.dataset.used || '0');
+          bar.style.width = used + '%';
         });
       });
     }
@@ -856,146 +864,149 @@ accounts.sort((a, b) => (b.total || 0) - (a.total || 0));
       setTimeout(() => loader.remove(), 700);
     }
 
-    // 使用 DOMContentLoaded，避免图片等资源阻塞
     document.addEventListener('DOMContentLoaded', () => {
+      // 数字 & 进度条动画
       animateNumbers();
       animateProgressBars();
       hideLoadingScreen();
-    });
 
-    // 刷新按钮
-    const refreshBtn = document.getElementById('refresh-btn');
-    if (refreshBtn) {
-      refreshBtn.addEventListener('click', () => {
-        document.body.style.opacity = '0.6';
-        setTimeout(() => location.reload(), 300);
-      });
-    }
-
-    // 主题切换
-    const root = document.documentElement;
-    const toggle = document.getElementById('theme-toggle');
-    if (localStorage.getItem('theme') === 'dark' ||
-        (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-      root.classList.add('dark');
-    }
-    if (toggle) {
-      toggle.addEventListener('click', () => {
-        root.classList.toggle('dark');
-        localStorage.setItem('theme', root.classList.contains('dark') ? 'dark' : 'light');
-      });
-    }
-
-    const floatBtn = document.getElementById("Arlettebrook-floatBtn");
-    const menu = document.getElementById("Arlettebrook-menu");
-    const items = [...document.querySelectorAll(".Arlettebrook-menu-item")];
-
-    if (floatBtn && menu && items.length) {
-      /* ripple init */
-      items.forEach(item=>{
-        const r=document.createElement("span");
-        r.className="Arlettebrook-ripple";
-        item.appendChild(r);
-      });
-
-      /* close menu */
-      function closeMenu(){
-        floatBtn.classList.remove("Arlettebrook-open");
-        menu.classList.remove("Arlettebrook-open");
+      // 刷新按钮
+      const refreshBtn = document.getElementById('refresh-btn');
+      if (refreshBtn) {
+        refreshBtn.addEventListener('click', () => {
+          document.body.style.opacity = '0.6';
+          setTimeout(() => location.reload(), 300);
+        }, { passive: true });
       }
 
-      /* main toggle */
-      floatBtn.addEventListener("click",()=>{
-        floatBtn.classList.toggle("Arlettebrook-open");
-        menu.classList.toggle("Arlettebrook-open");
+      // 主题切换
+      const root = document.documentElement;
+      const toggle = document.getElementById('theme-toggle');
+      if (localStorage.getItem('theme') === 'dark' ||
+          (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        root.classList.add('dark');
+      }
+      if (toggle) {
+        toggle.addEventListener('click', () => {
+          root.classList.toggle('dark');
+          localStorage.setItem('theme', root.classList.contains('dark') ? 'dark' : 'light');
+        });
+      }
 
-        let ripple=floatBtn.querySelector(".Arlettebrook-ripple");
-        if(!ripple){
-          ripple=document.createElement("span");
-          ripple.className="Arlettebrook-ripple";
-          floatBtn.appendChild(ripple);
+      const floatBtn = document.getElementById("Arlettebrook-floatBtn");
+      const menu = document.getElementById("Arlettebrook-menu");
+      const items = Array.from(document.querySelectorAll(".Arlettebrook-menu-item"));
+
+      if (floatBtn && menu && items.length) {
+        // ripple init
+        items.forEach(item => {
+          const r = document.createElement("span");
+          r.className = "Arlettebrook-ripple";
+          item.appendChild(r);
+        });
+
+        function closeMenu() {
+          floatBtn.classList.remove("Arlettebrook-open");
+          menu.classList.remove("Arlettebrook-open");
         }
-        ripple.classList.remove("Arlettebrook-animate");
-        void ripple.offsetWidth;
-        ripple.classList.add("Arlettebrook-animate");
 
-        requestAnimationFrame(()=>{
-          items.forEach((item,i)=>{
-            const rp=item.querySelector(".Arlettebrook-ripple");
-            if (!rp) return;
-            rp.classList.remove("Arlettebrook-animate");
-            void rp.offsetWidth;
-            setTimeout(()=> rp.classList.add("Arlettebrook-animate"), i*70);
+        // 主按钮
+        floatBtn.addEventListener("click", () => {
+          floatBtn.classList.toggle("Arlettebrook-open");
+          menu.classList.toggle("Arlettebrook-open");
+
+          let ripple = floatBtn.querySelector(".Arlettebrook-ripple");
+          if (!ripple) {
+            ripple = document.createElement("span");
+            ripple.className = "Arlettebrook-ripple";
+            floatBtn.appendChild(ripple);
+          }
+          ripple.classList.remove("Arlettebrook-animate");
+          void ripple.offsetWidth;
+          ripple.classList.add("Arlettebrook-animate");
+
+          requestAnimationFrame(() => {
+            items.forEach((item, i) => {
+              const rp = item.querySelector(".Arlettebrook-ripple");
+              if (!rp) return;
+              rp.classList.remove("Arlettebrook-animate");
+              void rp.offsetWidth;
+              setTimeout(() => rp.classList.add("Arlettebrook-animate"), i * 70);
+            });
           });
         });
-      });
 
-      /* 子按钮动作顺序：登出 / 管理 / 其他 */
-      const names = ["登出","管理","其他"];
+        // 子按钮动作顺序：登出 / 管理 / 其他
+        const names = ["登出", "管理", "其他"];
 
-      items.forEach((item,i)=>{
-        item.addEventListener("click",()=>{
-          const action = names[i];
+        items.forEach((item, i) => {
+          item.addEventListener("click", () => {
+            const action = names[i];
 
-          if (action === "登出") {
-            fetch("/logout", {
-              method: "POST"
-            })
-            .then(async res => {
-              const html = await res.text();
-              document.open();
-              document.write(html);
-              document.close();
-            })
-            .catch(() => alert("无法连接到服务器"));
-          } else {
-            alert("点击：" + action);
-          }
+            if (action === "登出") {
+              fetch("/logout", {
+                method: "POST"
+              })
+                .then(async res => {
+                  const html = await res.text();
+                  document.open();
+                  document.write(html);
+                  document.close();
+                })
+                .catch(() => alert("无法连接到服务器"));
+            } else {
+              alert("点击：" + action);
+            }
 
+            closeMenu();
+          });
+        });
+
+        // 点击空白关闭
+        document.addEventListener("click", (e) => {
+          if (!menu.classList.contains("Arlettebrook-open")) return;
+          if (menu.contains(e.target) || floatBtn.contains(e.target)) return;
           closeMenu();
         });
-      });
 
-      /* 点击空白关闭 */
-      document.addEventListener("click",(e)=>{
-        if(!menu.classList.contains("Arlettebrook-open")) return;
-        if(menu.contains(e.target)||floatBtn.contains(e.target)) return;
-        closeMenu();
-      });
+        // 滑动关闭
+        let startY = 0;
+        document.addEventListener("touchstart", e => {
+          if (!e.touches[0]) return;
+          startY = e.touches[0].clientY;
+        }, { passive: true });
 
-      /* 滑动关闭 */
-      let startY=0;
-      document.addEventListener("touchstart",e=> startY=e.touches[0].clientY);
-      document.addEventListener("touchmove",e=>{
-        if(!menu.classList.contains("Arlettebrook-open")) return;
-        if(Math.abs(e.touches[0].clientY-startY)>30) closeMenu();
-      });
+        document.addEventListener("touchmove", e => {
+          if (!menu.classList.contains("Arlettebrook-open")) return;
+          if (!e.touches[0]) return;
+          if (Math.abs(e.touches[0].clientY - startY) > 30) closeMenu();
+        }, { passive: true });
 
-      /* 滚动隐藏按钮 */
-      let lastY=window.scrollY;
-      let ticking=false;
+        // 滚动隐藏按钮（rAF 节流）
+        let lastY = window.scrollY;
+        let ticking = false;
 
-      window.addEventListener("scroll",()=>{
-        if(!ticking){
-          requestAnimationFrame(()=>{
-            const y=window.scrollY;
+        window.addEventListener("scroll", () => {
+          if (ticking) return;
+          ticking = true;
+          requestAnimationFrame(() => {
+            const y = window.scrollY;
 
-            if(y>lastY+10){
+            if (y > lastY + 10) {
               floatBtn.classList.remove("Arlettebrook-show");
               floatBtn.classList.add("Arlettebrook-hide");
-              if(menu.classList.contains("Arlettebrook-open")) closeMenu();
-            }else if(y<lastY-10){
+              if (menu.classList.contains("Arlettebrook-open")) closeMenu();
+            } else if (y < lastY - 10) {
               floatBtn.classList.remove("Arlettebrook-hide");
               floatBtn.classList.add("Arlettebrook-show");
             }
 
-            lastY=y;
-            ticking=false;
+            lastY = y;
+            ticking = false;
           });
-          ticking=true;
-        }
-      });
-    }
+        }, { passive: true });
+      }
+    });
   </script>
 </body>
 </html>`;
