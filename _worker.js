@@ -1,4 +1,10 @@
 export default {
+
+  async scheduled(event, env, ctx) {
+  ctx.waitUntil(pushAllUsageToTelegram(env, event));
+}
+
+
   async fetch(request, env) {
     const url = new URL(request.url);
     const PASSWORD = env.PASSWORD || "mysecret";
@@ -1022,5 +1028,134 @@ function escapeHtml(str) {
   if (!str) return '';
   return String(str).replace(/[&<>"']/g, (s) => {
     return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[s];
+  });
+}
+
+
+
+// ======= Telegram 定时推送（UTC 07:55） =======
+async function pushAllUsageToTelegram(env, event) {
+  const botToken = env.TELEGRAM_BOT_TOKEN;
+  const chatId = env.TELEGRAM_CHAT_ID;
+  if (!botToken || !chatId) return;
+
+  const tokens = (env.MULTI_CF_API_TOKENS || "")
+    .split(",")
+    .map(t => t.trim())
+    .filter(Boolean);
+
+  if (!tokens.length) return;
+
+  const data = await usage(tokens);
+
+  // 每页 5 条（每条 Telegram 消息一个“页”）
+  const pages = buildTelegramUsagePages(data, event, 5);
+
+  for (const pageText of pages) {
+    // 这里不再按字符 split，因为你要求按“条数分页”
+    await sendTelegramText(botToken, chatId, pageText, env.TELEGRAM_THREAD_ID);
+  }
+}
+
+
+function buildTelegramUsagePages(data, event, pageSize = 5) {
+  const ts = new Date().toISOString().replace("T", " ").replace("Z", " UTC");
+
+  if (!data?.success) {
+    return [[
+      "🚨 Cloudflare 用量定时推送",
+      `🕒 时间：${ts}`,
+      event?.cron ? `⏱ 触发：${event.cron}` : "",
+      "",
+      "❌ 获取数据失败，请检查 API Token 或网络。",
+      data?.error ? `原因：${data.error}` : ""
+    ].filter(Boolean).join("\n")];
+  }
+
+  const accounts = Array.isArray(data.accounts) ? data.accounts : [];
+
+  // 按“总计 total”降序排序
+  accounts.sort((a, b) => Number(b.total || 0) - Number(a.total || 0));
+
+  const totalPages = Math.max(1, Math.ceil(accounts.length / pageSize));
+  const pages = [];
+
+  for (let i = 0; i < totalPages; i++) {
+    const slice = accounts.slice(i * pageSize, (i + 1) * pageSize);
+
+    const lines = [];
+    lines.push("📊 Cloudflare 用量汇总（定时推送）");
+    lines.push(`🕒 时间：${ts}`);
+    if (event?.cron) lines.push(`⏱ 触发：${event.cron}`);
+    lines.push(`📄 第 ${i + 1} / ${totalPages} 页（每页 ${pageSize} 条）`);
+    lines.push("━━━━━━━━━━━━━━━━━━━━");
+    lines.push("");
+
+    slice.forEach((a, idx) => {
+      const rank = i * pageSize + idx + 1;
+      const name = a.account_name || "未命名账号";
+
+      const pagesNum = Number(a.pages || 0);
+      const workersNum = Number(a.workers || 0);
+      const total = Number(a.total || 0);
+      const remain = Number(a.free_quota_remaining || 0);
+
+      lines.push(`🏷 #${rank} 账号：${name}`);
+
+      if (a.error) {
+        lines.push(`   ❌ 获取失败：${a.error}`);
+      } else {
+        lines.push(`   📄 Pages：${formatNumber(pagesNum)}`);
+        lines.push(`   🧩 Workers：${formatNumber(workersNum)}`);
+        lines.push(`   🔥 总计：${formatNumber(total)}`);
+        lines.push(`   🟢 免费额度剩余：${formatNumber(remain)}`);
+      }
+
+      // 分隔线
+      lines.push("");
+      lines.push("────────────────────");
+      lines.push("");
+    });
+
+    pages.push(lines.join("\n").trim());
+  }
+
+  return pages;
+}
+
+function formatNumber(n) {
+  const num = Number(n || 0);
+  return num.toLocaleString("en-US");
+}
+
+
+function splitTelegramText(text, max = 3800) {
+  if (text.length <= max) return [text];
+  const out = [];
+  let buf = "";
+  for (const line of text.split("\n")) {
+    if ((buf + "\n" + line).length > max) {
+      out.push(buf);
+      buf = line;
+    } else {
+      buf += (buf ? "\n" : "") + line;
+    }
+  }
+  if (buf) out.push(buf);
+  return out;
+}
+
+async function sendTelegramText(token, chatId, text, threadId) {
+  const body = {
+    chat_id: chatId,
+    text,
+    disable_web_page_preview: true
+  };
+  if (threadId) body.message_thread_id = Number(threadId);
+
+  await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(body)
   });
 }
